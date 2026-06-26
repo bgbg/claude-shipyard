@@ -44,6 +44,25 @@ Required sections:
 
 Optional (add only if they reduce ambiguity): Scope/Non-Goals, Requirements/Constraints, Risks/Mitigations, Dependencies, Verification/Acceptance Criteria, Deliverables, Rollout/Backout.
 
+## Visual (optional)
+
+Add a `## Visual` section **only when a picture genuinely clarifies the plan** — multi-module work, non-trivial flows, schema changes, or new components with non-obvious relationships. Skip it for single-file changes, simple bug fixes, or anything you could describe in one sentence. Never pad a plan with filler diagrams.
+
+Use one (rarely two) of the following, in this order of preference:
+
+- **Mermaid diagrams** — preferred because GitHub renders them natively in issues, PRs, and Markdown. Pick the type that matches the actual question the reader has:
+  - `graph TD` / `graph LR` for component or module relationships
+  - `sequenceDiagram` for an interaction across services, processes, or actors
+  - `erDiagram` or `classDiagram` for a data model
+  - `flowchart` for branching logic that's hard to describe in prose
+- **Markdown file tree** — nested bullets showing new/touched paths, grouped by top-level directory. Use when the change is primarily structural (new module, large refactor).
+
+Rules:
+- Keep diagrams under ~15 nodes. If you need more, split into two diagrams or drop it.
+- Label nodes with the actual symbol/file/component name from the codebase — no placeholders like "Service A".
+- Mark anything that doesn't exist yet (e.g. `NewWorker[NewWorker (new)]`) so reviewers can tell at a glance what's the delta.
+- One diagram, not a gallery. The goal is the fastest possible read, not a documentation set.
+
 ## Arguments (from {{ARGS}})
 - `<output-file>`: Output path (general mode)
 - `--from-issue <number|url>` or `<number>`: GitHub issue

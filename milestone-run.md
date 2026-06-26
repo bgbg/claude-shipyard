@@ -8,7 +8,7 @@ Execute a GitHub milestone end-to-end: plan, implement, review, merge, close —
 
 ## Phase 1: Load and Analyze
 
-1. **Fetch milestone** — Get details and all open issues via `gh api`. If no open issues remain, skip to Phase 3 (the milestone may still need its final integration→main merge).
+1. **Fetch milestone** — Get the milestone's open issues and its execution-plan comment, pulling only the fields used: `gh issue list --milestone "<title>" --state open --json number,title,labels,body` (plus the comment). Do not dump raw full milestone `gh api` JSON into context. If no open issues remain, skip to Phase 3 (the milestone may still need its final integration→main merge).
 2. **Resolve integration branch and worktree**:
    - Parse the `Integration branch:` and `Integration worktree:` lines from the `## Execution Plan` comment posted by `/milestone-plan`.
    - If `Integration branch:` is found: verify the branch exists on `origin`. If missing locally, fetch it: `git fetch origin <branch>:<branch>`.
@@ -26,7 +26,19 @@ Execute a GitHub milestone end-to-end: plan, implement, review, merge, close —
 
 ## Phase 2: Execute
 
-5. **Process waves sequentially** — Up to 3 issues in parallel per wave via sub-agents. Track status: `pending` / `in-progress` / `done` / `blocked` / `failed`.
+5. **Process waves sequentially** — For each issue in the wave, spawn one sub-agent that runs the *entire* per-issue pipeline (steps 7–9: pre-start check, implement, review, merge) in its own context. Up to 3 such sub-agents run in parallel per wave. The orchestrator never inlines a per-issue `/plan-ok`, `/code-review`, review-polling, or fix cycle — all of it lives inside the sub-agent, so its file reads, edits, and review-comment dumps stay out of the orchestrator's context. Each sub-agent returns ONLY a compact summary; the orchestrator must not pull the sub-agent's transcript.
+
+   Per-issue summary schema (the sub-agent's entire return value):
+   ```
+   issue: <number>
+   status: done | needs-review | blocked | failed
+   pr_url: <url or none>
+   merged: true | false
+   blockers: [<external blockers, if any>]
+   decisions_affecting_later_issues: [<short notes later issues need, e.g. "renamed config key X→Y">]
+   notes: <one line, optional>
+   ```
+   Track wave status from these summaries: `pending` / `in-progress` / `done` / `blocked` / `failed`. The `decisions_affecting_later_issues` field is how cross-issue context survives without keeping each issue's full transcript — fold it into the context handed to later issues' sub-agents.
 
 6. **Pre-wave sync** — Before starting each wave (including the first). All commands run inside the integration worktree via `git -C <integration-worktree-path>`; the project's main directory is never touched.
    - Fetch `main`: `git fetch origin main`.
@@ -36,8 +48,10 @@ Execute a GitHub milestone end-to-end: plan, implement, review, merge, close —
    - **On clean merge**: `git -C <integration-worktree-path> push origin <integration-branch>`. Continue to step 7.
    - This means each wave's issue worktrees fork off the latest integration HEAD, which includes both prior waves' merges and any updates from `main`.
 
-7. **Pre-start check** — Before starting each issue in the wave:
-   - Verify `todo__<issue-number>.md` exists (should have been created by `/milestone-plan`). If missing, generate it as fallback: `/make-plan --from-issue <number> --tree --base <integration-branch>`.
+**Steps 7–9 run inside the per-issue sub-agent** (one per issue, ≤3 parallel per wave), not in the orchestrator. The sub-agent performs all of the following, then returns the step-5 summary as its only output.
+
+7. **Pre-start check** — Before starting the issue:
+   - Ensure the plan exists: if `todo__<issue-number>.md` is present (upfront mode), use it; if absent (lazy mode — the default), generate it now inside this sub-agent: `/make-plan --from-issue <number> --tree --base <integration-branch>`. Either way the generation and its codebase reads happen in the sub-agent's context, not the orchestrator's. Generating lazily against the current integration HEAD also means later-wave plans reflect prior waves' merged work.
    - Confirm the plan's `Base:` line matches the current integration branch. If it points to `main` or a stale branch, regenerate.
    - Re-read the issue from GitHub (`gh issue view`). Compare against the plan. If the issue was materially updated since the plan was created (new requirements, changed scope, new comments with decisions), regenerate the plan with `--base <integration-branch>`.
 
@@ -46,15 +60,16 @@ Execute a GitHub milestone end-to-end: plan, implement, review, merge, close —
 9. **Review and Merge** (issue PR → integration branch, NOT main):
    - `/git-pre-pr --base <integration-branch>` → `/git-pr --base <integration-branch> --issues "<number>"`
    - Request `/copilot-review`, then `/code-review:code-review`
-   - Wait up to 10 min (check every minute) for both reviews
+   - Wait up to 10 min for both reviews — poll inside this sub-agent and keep only the final outcome; do not surface per-minute status to the orchestrator.
    - `/gh-code-review --retry` → fix issues → `/git-add-commit-push`
-   - Max 2 fix-review cycles, then escalate: `NEEDS REVIEW: Issue #<number>`
+   - Max 2 fix-review cycles, then escalate by setting `status: needs-review` in the summary (do not block the wave).
    - `/git-pr-merge` → `/pr-merged` → verify issue closed
    - `/git-pr-merge` automatically checks out the PR's base (the integration branch), so no `main` checkout happens here.
+   - **Return** the step-5 summary as the sub-agent's entire output — nothing else.
 
 10. **Post-close refresh** — After each issue is closed:
-    - Re-fetch all milestone issues (`gh api`). Check whether new issues were added to the milestone.
-    - If new issues found: incorporate them into the execution order, determine their wave placement based on dependencies, and run `/make-plan --from-issue <number> --tree --base <integration-branch>` for each new issue.
+    - Re-fetch only issue numbers and `updatedAt` (`gh issue list --milestone "<title>" --json number,updatedAt`) to detect additions or changes cheaply. Pull a full body only for an issue that is new or whose `updatedAt` moved — do not re-dump every body.
+    - If new issues found: incorporate them into the execution order and determine wave placement from dependencies. Plan generation for new issues follows the run's mode — lazy by default (their sub-agents generate plans at pre-start); only generate now if running upfront.
     - Re-validate that the remaining execution order still makes sense given completed work and any new issues.
 
 11. **Handle blocked issues** — When unblocked, resume from where left off. When only blocked issues remain, print summary and stay alive waiting for user.

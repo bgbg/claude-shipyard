@@ -41,8 +41,9 @@ Required sections:
 5. **Open Questions**: Q0 for branch strategy if needed, then Q1, Q2... Each with up to 3 options (A/B/C) with 1-2 sentence implications. "No questions" if none.
 6. **Approach**: rationale, alternatives briefly noted
 7. **Steps**: numbered, outcome-focused. For complex tasks, break into sub-issues.
+8. **Acceptance Criteria** (required): a checklist where every item is a falsifiable statement that names its verification method — the test to run, the command/`/verify` steps to execute, or the manual check. In issue mode, carry these down from the issue's spec/acceptance criteria (set by `/milestone-plan`); if the issue has none, write them and note the gap. These are what `/milestone-run` verifies the PR against before merge — not optional.
 
-Optional (add only if they reduce ambiguity): Scope/Non-Goals, Requirements/Constraints, Risks/Mitigations, Dependencies, Verification/Acceptance Criteria, Deliverables, Rollout/Backout.
+Optional (add only if they reduce ambiguity): Scope/Non-Goals, Requirements/Constraints, Risks/Mitigations, Dependencies, Deliverables, Rollout/Backout.
 
 ## Visual (optional)
 

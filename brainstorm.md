@@ -1,10 +1,10 @@
 ---
-description: Iterative brainstorm for large milestones, features, or architectural decisions. Use when user wants to brainstorm, design a milestone, or explore a large-scope idea through guided conversation.
+description: Iterative brainstorm for large milestones, features, or architectural decisions. Produces both a design document (the *why*) and a verifiable spec (the testable *what*). Use when user wants to brainstorm, design a milestone, or explore a large-scope idea through guided conversation.
 ---
 
 # Brainstorm
 
-Guide the user through an iterative ideation session for a large milestone, feature, or architectural decision. Act as a senior developer/architect — proactive, opinionated when it adds value, never argumentative. The goal is a fast, meaningful conversation that converges on a well-defined design.
+Guide the user through an iterative ideation session for a large milestone, feature, or architectural decision. Act as a senior developer/architect — proactive, opinionated when it adds value, never argumentative. The goal is a fast, meaningful conversation that converges on a well-defined design *and a verifiable spec*.
 
 ## Behavior
 
@@ -22,20 +22,23 @@ Guide the user through an iterative ideation session for a large milestone, feat
    - Ask ONE question at a time (small, closely related compound questions are acceptable — never disguise multiple large questions as one).
    - Before each question, display: `**Clarity: N/100**`
    - Start with "why" (goals, motivation), then target the largest remaining gap in understanding. Dimensions to cover: goals, scope, constraints, users/audience, technical approach, data model, dependencies, risks, rollout.
+   - A dimension is only "covered" when you could write a falsifiable acceptance criterion for it. If you can't yet state the test, that gap is your next question. This is the forcing function — an underspecified requirement is one you can't write a check for.
    - Be proactive: read relevant codebase files, check CLAUDE.md, explore architecture, search the web — do whatever is needed to ask informed questions and propose concrete ideas.
    - Propose ideas and directions for the user to react to when it adds value. Act as a collaborator, not an interviewer.
    - **Do NOT modify any files during this phase.** Read-only access to codebase and web.
 
 4. **Termination conditions**
+   - **The score may only reach 90 or more when every requirement is testable** — i.e. you can state a falsifiable acceptance criterion (and its verification method) for each. If any requirement can't yet be made testable, clarity is below 90 by definition; keep asking.
    - **Score reaches 99**: Say "I have all the information I need. Is there anything else you want to add?" Then proceed to Phase 2 after user confirms.
    - **User says stop/enough/go ahead**: Proceed to Phase 2 immediately.
    - No limit on number of questions.
 
 ### Phase 2: Output
 
-5. **Generate design document**
-   - Produce a complete design document incorporating all decisions made during the conversation.
-   - Structure (adapt sections as needed — not all are required):
+5. **Generate design document + spec**
+   - Produce a single output with two clearly-labeled parts. Division of labor: the **design** is the source of truth for *why* (the direction a human signs off on); the **spec** is the source of truth for *correct* (the verifiable contract `/milestone-run` later checks against). Do not restate requirements in both — they will drift. Put rationale in the design; put testable requirements only in the spec.
+
+   **Part A — Design** (adapt sections as needed — not all are required):
      - **Title**: One-line goal statement
      - **Motivation**: Why this work matters
      - **Key Decisions**: Summary of decisions made during brainstorm, formatted as "We decided X because Y"
@@ -44,8 +47,17 @@ Guide the user through an iterative ideation session for a large milestone, feat
      - **Steps / Work Breakdown**: Numbered, outcome-focused steps suitable for breaking into GitHub issues
      - **Dependencies**: External dependencies, services, libraries
      - **Risks & Mitigations**: Top risks with practical mitigations
-     - **Open Questions**: Areas not fully covered during the brainstorm that need further thought
-   - Omit sections that don't apply. Add sections if the topic demands it.
+     - Omit sections that don't apply. Add sections if the topic demands it.
+
+   **Part B — Spec** (the verifiable contract — required):
+     - **Requirements**: testable statements, preferably Given/When/Then.
+     - **Acceptance criteria**: a checklist where every item names its verification method (test, command, `/verify` steps, or manual check). These compile 1:1 into per-issue acceptance criteria in `/milestone-plan`.
+     - **Invariants**: properties that must always hold. Flag any that could be mechanically enforced — these are the candidates for `/update-config` hooks (the environment layer).
+     - **Non-goals**: explicitly out of scope.
+     - **Interfaces / contracts**: APIs, data shapes, schemas (where relevant).
+     - **Edge cases & error behavior**: what happens on bad input, failure, or limits.
+     - **Open questions blocking speccing**: any requirement you could not make testable. If this list is non-empty, the spec is not done — surface it prominently.
+   - **Proportionality**: scale the spec to the work. A medium feature may need only a half-page of acceptance criteria + invariants + non-goals; a large milestone needs the full structure. The bar is *every requirement testable*, not *maximum length*.
 
 6. **Output destination**
    - Ask the user: output in chat or write to file?
@@ -57,7 +69,7 @@ Guide the user through an iterative ideation session for a large milestone, feat
 - **Project-aware**: All questions and the final design must be grounded in the actual project context (architecture, tech stack, existing patterns from CLAUDE.md and codebase).
 - **One question at a time**: Never present a list of questions. Small compound questions on closely related topics are acceptable.
 - **No argumentation**: Propose ideas when valuable. If the user disagrees, accept and move on.
-- **Clarity score**: Must appear before every question. Score reflects how well-defined the overall design is, not how many questions have been asked. The score does not have to monotonically increase — if the user adds information that introduces ambiguity or expands scope, the score can decrease accordingly.
+- **Clarity score**: Must appear before every question. Score reflects how well-defined and *testable* the spec is — i.e. for how much of the work you could write a falsifiable acceptance criterion — not how many questions have been asked. The score does not have to monotonically increase — if the user adds information that introduces ambiguity or expands scope, the score can decrease accordingly. It may only reach 90 or more when every requirement is testable (see Phase 1 termination).
 
 ## Style
 - Expert audience: crisp, skimmable

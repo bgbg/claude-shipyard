@@ -11,12 +11,14 @@ Take a design document (from `/brainstorm`, a markdown file, or free-form descri
 ### Phase 1: Ingest Design
 
 1. **Determine input**: `--file <path>` for markdown file, `<text>` for free-form, or auto-detect from brainstorm session. Accept any markdown file.
-2. **Analyze design and codebase** — Read design document, CLAUDE.md, and relevant code. Verify any referenced existing code is accurate.
+2. **Analyze design, spec, and codebase** — Read the design document and its Spec section (acceptance criteria, invariants, non-goals), CLAUDE.md, and relevant code. Verify any referenced existing code is accurate. The spec's acceptance criteria are the master list that issue criteria must fully cover.
 
 ### Phase 2: Break Down into Issues
 
 3. **Decompose into issues** — Each issue should be sized for a single PR (bot-reviewed, so can be meatier than human-atomic). Balance granularity vs chunk size. Each issue needs:
-   - Clear title, description with context/scope/acceptance criteria
+   - Clear title, description with context/scope
+   - **Acceptance criteria** carried down from the design's Spec: each issue gets the slice of the spec's acceptance criteria it owns, copied as a checklist where every item names its verification method (test/command/`/verify`/manual check). Every spec criterion must land in exactly one issue — if a criterion maps to no issue the decomposition is incomplete; if an issue has no criteria it is underspecified. If the input is a free-form description with no spec, write the criteria here before creating the issue.
+   - **Invariants** from the spec the issue must preserve (note any that are hook candidates).
    - Dependencies on other issues (`Blocked by #N` / `Depends on #N`)
    - `blocked:user-action` label if requiring user action (API keys, manual setup, etc.)
 
@@ -65,6 +67,6 @@ Take a design document (from `/brainstorm`, a markdown file, or free-form descri
 - Dependencies must be explicit in issue bodies
 - Max 3 parallel issues per wave
 - No emojis, no time estimates. Backticks for code elements.
-- Issue titles: descriptive, no "Step N:" prefixes. Bodies: concise, acceptance criteria as checklist.
+- Issue titles: descriptive, no "Step N:" prefixes. Bodies: concise, with acceptance criteria as a checklist where each item states how it is verified.
 - Integration branch is mandatory. Issue PRs target the integration branch, never `main`. The final integration→main merge happens in `/milestone-run` after all issues are closed.
 - Integration branch must live in a dedicated worktree at `.trees/milestone-<number>-<slug>`. The project's main directory must never be checked out to the integration branch — all milestone operations run inside the worktree.

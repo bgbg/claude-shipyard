@@ -35,39 +35,44 @@ Plans require the most user intervention (open questions, scope clarifications),
 6. For each issue **in order**:
    - Run `/git-work-on-issue <issue> --tree --base <base>` — creates the branch, worktree, and (because `--plan` is the default) generates the plan via `/make-plan`.
    - If `/make-plan` raises Open Questions that need answers, resolve them with the user now. Use `/say` to alert the user if they have stepped away.
-   - Confirm `todo__<issue>.md` exists and its `Base:` line matches the resolved base.
+   - Confirm `todo__<issue>.md` exists, its `Base:` line matches the resolved base, and it carries the issue's **Acceptance Criteria** (each with a verification method). If criteria are missing, regenerate the plan — the spec-conformance gate in Phase 2 needs them.
 7. After all plans are ready, print a one-line summary per issue (branch, worktree path, plan file).
 
-### Phase 2: Develop → PR → Review → Merge → Cleanup
+### Phase 2: Develop → Verify → PR → Review → Merge → Cleanup
 Now run the implementation cycle for each issue — sequentially by default, or in parallel waves if `--parallel` (max 3 concurrent via sub-agents). All worktrees and plans already exist from Phase 1.
 
 For each issue:
 
 8. **Implement**: `/plan-ok <issue>` — runs from inside the worktree. The plan's `Base:` line drives the branch base.
-9. **Pre-PR check**: `/git-pre-pr`
-10. **Open PR**: `/git-pr --issues "<issue>"` (with `--base <base>` if non-default)
-11. **Reviews**:
+9. **Verify against spec (spec-conformance gate)** — checks "did we build what the issue asked," distinct from code review's "is this good code." Run before opening the PR.
+    - **External signal**: run the plan's acceptance criteria — execute the named tests/commands and run `/verify` to exercise the actual behavior. Record pass/fail per criterion.
+    - **Spec critic**: spawn one independent sub-agent that judges the diff against the issue's acceptance criteria and returns a per-criterion verdict (met / not-met / unclear) with evidence. It does not assess code quality.
+    - **Gate**: every acceptance criterion must be met (tests green and critic confirms). If any fails, fix and re-run the gate (up to 2 cycles). Do not open the PR or merge with unmet criteria; if still unmet after 2 cycles, escalate via `/say`, mark the issue `open-needs-review`, and move on (do not halt the run).
+10. **Pre-PR check**: `/git-pre-pr`
+11. **Open PR**: `/git-pr --issues "<issue>"` (with `--base <base>` if non-default)
+12. **Reviews**:
     - `/copilot-review`
     - `/code-review:code-review`
     - Wait up to 15 min (poll every minute) for both to post results.
-12. **Address feedback**: `/gh-code-review --retry` → fix issues → `/git-add-commit-push`.
+13. **Address feedback**: `/gh-code-review --retry` → fix issues → `/git-add-commit-push`.
     - Max 2 fix-review cycles. After that, escalate via `/say`.
-13. **Merge and cleanup** (skip if `--no-merge`): `/git-pr-merge` → `/pr-merged`. Verify the issue is closed and the worktree is removed.
+14. **Merge and cleanup** (skip if `--no-merge`): `/git-pr-merge` → `/pr-merged`. Verify the issue is closed and the worktree is removed.
 
 ### Phase 3: Human intervention (applies throughout)
 - Whenever the run hits a blocker that needs the user (unanswered plan questions, failing tests after retries, unresolved review feedback, merge conflicts, auth failures), call `/say` with a short message naming the issue and the blocker, then wait for the user.
 - Examples: `/say "Issue 727 needs your input on the plan"`, `/say "Issue 782 has merge conflicts"`.
 
 ### Phase 4: Summary
-14. After all issues finish (or are blocked), print a table:
+15. After all issues finish (or are blocked), print a table:
     - Issue | Branch | PR | Status (`merged` / `open-needs-review` / `blocked` / `failed`)
-    - List any blocked/failed issues with the specific reason.
+    - List any blocked/failed issues with the specific reason. For `open-needs-review` due to unmet acceptance criteria, name the failed criteria.
 
 ## Constraints
 - **Always use worktrees** (never modify the user's main checkout).
 - **Sequential by default**: only enable `--parallel` when explicitly requested.
 - **Parallel cap**: max 3 concurrent issues per wave (via sub-agents).
 - **Max 2 fix-review cycles** per issue, then escalate via `/say`.
+- **Spec-conformance gate** (tests + `/verify` + spec critic against the issue's acceptance criteria) must pass before opening the PR/merge. It is separate from code review and runs first. Max 2 gate cycles, then escalate via `/say` and mark `open-needs-review`. No merge with unmet criteria.
 - **Never force-push** without explicit user confirmation.
 - **Never skip hooks** (`--no-verify`).
 - A single failed/blocked issue does NOT halt the rest of the run — mark it and continue.

@@ -16,13 +16,19 @@ Perform a fast, high-signal self-review of the current branch before opening a P
    - **Do NOT checkout the base branch**. Use `origin/<base>` for comparison — this avoids triggering file watchers and IDE reloads.
    - If tests fail, abort with a notice that specifies which tests failed.
 
-3) GitHub Issue Analysis
-   - If working on an issue, it is possible that a file named todo__<issue number>.md exists. Read its content.
-   - If the todo file does not eFetch the GitHub issue referenced in branch name or commit messages.
-   - Read the issue description and all comments to understand requirements.
-   - Compare issue requirements against commit log and changes in this branch.
-   - Answer: Have we addressed the issue? Are all items in the GitHub issue taken care of?
-   - Flag any missing requirements or incomplete implementations.
+3) Spec-conformance gate (when working on an issue)
+   Checks "did we build what the spec said," distinct from the code-quality checks below. This is the single chokepoint for acceptance-criteria verification — `/milestone-run` and `/issues-run` both rely on this step's verdict.
+   - Locate the plan: read `todo__<issue-number>.md` if present (issue named in the branch or commit messages). If no todo file exists, fetch the GitHub issue referenced in the branch name or commits and read its description and comments.
+   - Extract the **Acceptance Criteria** (each should name a verification method). If the plan/issue has none, report the spec as unverifiable, recommend adding criteria, and set the verdict to `incomplete`.
+   - Verify each criterion against the actual build:
+     - **Tests/commands**: run the criterion's named test or command (the suite run in step 0 may already cover some).
+     - **Behavior**: run `/verify` to exercise the change and observe real runtime behavior for criteria that describe it.
+     - **Spec critic** (higher assurance): spawn one independent sub-agent that judges the diff against the criteria and returns a per-criterion verdict (met / not-met / unclear) with evidence. It does not assess code quality.
+   - **Verdict** — report per-criterion `met` / `not-met` / `unverified`, plus an overall gate result:
+     - `pass` — every criterion met.
+     - `fail` — one or more criteria not met. State clearly: **DO NOT OPEN THE PR**, and list the failed criteria.
+     - `incomplete` — criteria could not be fully verified (e.g. `--fast`/`--no-tests`, or behavior not exercisable). Treat as not-passed; name what was skipped.
+   - This verdict is the gate other commands key on. Under `--fast`/`--no-tests`, criteria needing a test/suite run are `unverified` and the overall result is at best `incomplete`.
 
 4) Checks
    - Secrets/debug leftovers scan in changed hunks only.
@@ -43,11 +49,12 @@ Perform a fast, high-signal self-review of the current branch before opening a P
    - **Commit splitting**: If the commit is large or touches multiple scopes/areas, suggest splitting into manageable, focused commits by scope.
 
 6) Output
-   - Short markdown report with: Summary, Changes, Risks, Tests, Checklist.
+   - Short markdown report with: Summary, Spec-conformance (overall gate verdict + per-criterion results, when working on an issue), Changes, Risks, Tests, Checklist.
+   - When the spec-conformance verdict is `fail` or `incomplete`, lead the report with it — it is the blocking signal callers act on.
    - Do not include any signature lines or trailers (e.g., `Signed-off-by:`).
 
 ## Performance
-- **`--fast` mode**: Skip tests, skip suggestions (step 5), only run critical checks (secrets, lockfile, exception handling). Produce a minimal report.
+- **`--fast` mode**: Skip tests, skip suggestions (step 5), only run critical checks (secrets, lockfile, exception handling). Produce a minimal report. The spec-conformance gate (step 3) cannot fully run without tests, so it reports `incomplete` — do not rely on `--fast` when the acceptance-criteria gate must pass.
 - **Default mode**: Full analysis with tests, suggestions, and comprehensive checks.
 
 ## Arguments (from {{ARGS}})

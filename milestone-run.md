@@ -61,11 +61,8 @@ Execute a GitHub milestone end-to-end: plan, implement, review, merge, close —
 8. **Implement** — Run `/plan-ok <number>` (it reads the base from the plan; `CC_BASE_BRANCH` is also exported as a safety net). On external blockers: print `BLOCKED: Issue #<number> — <description>`, comment on issue, mark blocked, move on. On technical failure: retry once, then mark `failed`.
 
 9. **Verify, Review, and Merge** (issue PR → integration branch, NOT main):
-   - **Spec-conformance gate (run before code review).** This checks "did we build what the spec said," which is distinct from code review's "is this good code." Both gates must pass.
-     - **External signal**: run the issue's verification plan from its acceptance criteria — execute the named tests/commands and run `/verify` to exercise the actual behavior. Record pass/fail per criterion.
-     - **Spec critic**: spawn one independent sub-agent whose only job is to judge the diff against the issue's acceptance criteria and invariants, returning a per-criterion verdict (met / not-met / unclear) with evidence. It does not assess code quality.
-     - **Gate**: every acceptance criterion must be met (tests green and critic confirms). If any fails, fix and re-run the gate (up to 2 cycles). Do not merge with unmet criteria; if still unmet after 2 cycles, set `status: needs-review`, record the failed criteria in `acceptance: unmet:[...]`, and stop without merging (do not block the wave).
-   - `/git-pre-pr --base <integration-branch>` → `/git-pr --base <integration-branch> --issues "<number>"`
+   - **Spec-conformance gate**: `/git-pre-pr --base <integration-branch>` — its spec-conformance gate (step 3) verifies the build against the issue's acceptance criteria (tests + `/verify` + spec critic), distinct from code review's "is this good code." If its verdict is `fail` or `incomplete`, fix and re-run (up to 2 cycles). Do not merge with unmet criteria; if still unmet after 2 cycles, set `status: needs-review`, record the failed criteria in `acceptance: unmet:[...]`, and stop without merging (do not block the wave).
+   - `/git-pr --base <integration-branch> --issues "<number>"`
    - Request `/copilot-review`, then `/code-review:code-review`
    - Wait up to 10 min for both reviews — poll inside this sub-agent and keep only the final outcome; do not surface per-minute status to the orchestrator.
    - `/gh-code-review --retry` → fix issues → `/git-add-commit-push`
@@ -117,7 +114,7 @@ Run only when all milestone issues are closed.
 
 ## Constraints
 - Max 3 parallel issues, max 2 fix-review cycles per issue, max 2 spec-conformance-gate cycles per issue
-- The spec-conformance gate (tests + `/verify` + spec critic against the issue's acceptance criteria) must pass before merge. It is separate from code review and runs first. No merge with unmet acceptance criteria.
+- The spec-conformance gate runs inside `/git-pre-pr` (verifies the build against the issue's acceptance criteria: tests + `/verify` + spec critic). Its verdict must be `pass` before merge — `fail`/`incomplete` blocks. It is separate from code review. No merge with unmet acceptance criteria.
 - Always use worktrees. Never force-push without confirmation.
 - Blocked issues don't block the pipeline. Single failure doesn't stop the milestone.
 - Failed dependencies mark dependents as `blocked`.

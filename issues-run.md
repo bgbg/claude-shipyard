@@ -80,13 +80,14 @@ Per-issue cycle:
 14. **Address feedback**: `/gh-code-review --retry` → fix issues → `/git-add-commit-push`.
     - Max 2 fix-review cycles. After that, escalate via `/say`.
 15. **Merge and cleanup** (skip if `--no-merge`): `/git-pr-merge` → `/pr-merged`. Verify the issue is closed and the worktree is removed.
+16. **Compact between issues**: after an issue's cycle finishes (merged, or marked `open-needs-review`/`blocked`/`failed`) and **before starting the next issue**, run `/compact` to keep the orchestrator's context lean across a long run. Do this at every issue-to-issue transition; skip it after the final issue (go straight to Phase 4). It matters most for **shared/inline** issues, whose full cycle accumulates in the shared context; **isolated** issues already return only the compact summary, but compacting between them is still cheap and safe. Nothing is lost: plans live in `todo__<issue>.md` and state lives on GitHub, so a compacted context can resume the run.
 
 ### Phase 3: Human intervention (applies throughout)
 - Whenever the run hits a blocker that needs the user (unanswered plan questions, failing tests after retries, unresolved review feedback, merge conflicts, auth failures), call `/say` with a short message naming the issue and the blocker, then wait for the user.
 - Examples: `/say "Issue 727 needs your input on the plan"`, `/say "Issue 782 has merge conflicts"`.
 
 ### Phase 4: Summary
-16. After all issues finish (or are blocked), print a table:
+17. After all issues finish (or are blocked), print a table:
     - Issue | Mode (`isolated`/`shared`) | Branch | PR | Status (`merged` / `open-needs-review` / `blocked` / `failed`)
     - List any blocked/failed issues with the specific reason. For `open-needs-review` due to unmet acceptance criteria, name the failed criteria.
 
@@ -100,6 +101,7 @@ Per-issue cycle:
 - **Spec-conformance gate** runs inside `/git-pre-pr` (verifies the build against the issue's acceptance criteria: tests + `/verify` + spec critic). Its verdict must be `pass` before opening the PR/merge; `fail`/`incomplete` → fix and re-run, max 2 cycles, then escalate via `/say` and mark `open-needs-review`. No merge with unmet criteria.
 - **Never force-push** without explicit user confirmation.
 - **Never skip hooks** (`--no-verify`).
+- **Compact between issues**: run `/compact` at every issue-to-issue transition (Phase 2 step 16) to keep the orchestrator's context lean; skip after the final issue.
 - A single failed/blocked issue does NOT halt the rest of the run — mark it and continue.
 - No emojis, no time estimates in the summary.
 

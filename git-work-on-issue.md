@@ -37,6 +37,7 @@ Prepare working on a GitHub issue by creating a properly named branch and annota
      - Create git worktree in `.trees/<issue-number>-<type>-<kebab-description>` and work there.
      - Copy environment files to the new worktree: `.env`, `.env.local`, `.env.*` (if they exist in the main working directory).
      - Log which files were copied (or note if none exist).
+     - Exclude the whole `.trees` directory from Time Machine (macOS only, idempotent, no sudo): `command -v tmutil >/dev/null && tmutil addexclusion "$(git rev-parse --show-toplevel)/.trees"`. Excluding the parent covers every worktree under it, including ones created earlier. Committed work stays backed up in the main repo's `.git`.
    - Otherwise: `git checkout <base>` then `git pull --ff-only`, then `git checkout -b <derived-branch>`.
 
 6) Push and annotate

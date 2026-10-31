@@ -41,16 +41,13 @@ Use the resolved base branch from step 3.
 - Ask user if tasks require their intervention.
 
 ### 7) Review step
-- `/git-pre-pr --base <resolved-base>` → `/git-pr --base <resolved-base>` (omit `--base` if it equals the repo default)
-- If `--no-code-review` is NOT set:
-  1. Request `/copilot-review` first (remote), then run `/code-review:code-review` (local)
-  2. Wait up to 10 minutes, checking every minute. Stop when BOTH reviews are ready.
-  3. `/gh-code-review --retry` to read comments
-  4. Fix all problems, commit and push via `/git-add-commit-push`
-  5. If reviews had **critical** or **serious** problems, repeat steps 1–4 once more (max 2 rounds)
+- Skip this step if `--no-pr` is set.
+- `/git-pre-pr --base <resolved-base>` → `/git-pr --base <resolved-base>` (omit `--base` if it equals the repo default). Pass `--no-code-review` through to `/git-pr` if set.
+- `/git-pr` runs the code review and applies the fixes. Do not run another review here.
 
 ## Arguments (from {{ARGS}})
 - `--file <path>`: Plan file path
 - `--issue <number|url>`: GitHub issue
 - `<argument>`: Positional with smart detection (numeric/URL/path)
-- `--no-code-review`: Skip PR creation and code review
+- `--no-code-review`: Open the PR without code review (passed through to `/git-pr`)
+- `--no-pr`: Stop after step 6. `/issues-run` and `/milestone-run` use this because they run the pre-PR gate, the PR and the review themselves.

@@ -16,7 +16,6 @@ These are personal commands that have evolved over months of daily use. They lea
 ### Code review and PRs
 - **`/git-pre-pr`** — Comprehensive self-review before opening a PR (tests, secrets scan, exception-handling check, maintainability, missing tests, etc.).
 - **`/git-pr`** — Create a well-formed PR with auto-generated title and body.
-- **`/copilot-review`** — Request a GitHub Copilot review on the current PR.
 - **`/gh-code-review`** — Read and analyze code-review comments, grouped by severity.
 - **`/git-add-commit-push`** — Stage, commit (with an auto-generated message), and push.
 - **`/git-pr-merge`** — Merge the current PR and clean up branches/worktrees.
@@ -30,7 +29,6 @@ These are personal commands that have evolved over months of daily use. They lea
 
 ### Misc
 - **`/dataviz`** — Create or revise a publication-quality figure following Tufte/Few/Doumont principles (matplotlib/seaborn defaults baked in).
-- **`/marp-presentation`** — Build a Marp slide deck from scratch via guided Q&A.
 - **`/whats-the-status`** — Project status: branches vs. todo files.
 - **`/say`** — Speak text aloud via macOS `say`.
 

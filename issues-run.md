@@ -70,15 +70,11 @@ notes: <one line, optional>
 
 Per-issue cycle:
 
-10. **Implement**: `/plan-ok <issue>` — runs from inside the worktree. The plan's `Base:` line drives the branch base.
+10. **Implement**: `/plan-ok <issue> --no-pr` — runs from inside the worktree. The plan's `Base:` line drives the branch base.
 11. **Pre-PR check + spec-conformance gate**: `/git-pre-pr` (with `--base <base>` if non-default). Its spec-conformance gate (step 3) verifies the build against the plan's acceptance criteria (tests + `/verify` + spec critic), distinct from code review's "is this good code." If the verdict is `fail` or `incomplete`, fix and re-run (up to 2 cycles). Do not open the PR or merge with unmet criteria; if still unmet after 2 cycles, escalate via `/say`, mark the issue `open-needs-review`, and move on (do not halt the run).
 12. **Open PR**: `/git-pr --issues "<issue>"` (with `--base <base>` if non-default)
-13. **Reviews**:
-    - `/copilot-review`
-    - `/code-review:code-review`
-    - Wait up to 15 min (poll every minute) for both to post results.
-14. **Address feedback**: `/gh-code-review --retry` → fix issues → `/git-add-commit-push`.
-    - Max 2 fix-review cycles. After that, escalate via `/say`.
+13. **Review**: `/git-pr` in step 12 runs `/code-review high --fix` and commits the fixes, max 2 rounds. Do not run another review.
+14. **Escalate**: if critical or serious review problems remain after those 2 rounds, escalate via `/say`.
 15. **Merge and cleanup** (skip if `--no-merge`): `/git-pr-merge` → `/pr-merged`. Verify the issue is closed and the worktree is removed.
 16. **Compact between issues**: after an issue's cycle finishes (merged, or marked `open-needs-review`/`blocked`/`failed`) and **before starting the next issue**, run `/compact` to keep the orchestrator's context lean across a long run. Do this at every issue-to-issue transition; skip it after the final issue (go straight to Phase 4). It matters most for **shared/inline** issues, whose full cycle accumulates in the shared context; **isolated** issues already return only the compact summary, but compacting between them is still cheap and safe. Nothing is lost: plans live in `todo__<issue>.md` and state lives on GitHub, so a compacted context can resume the run.
 

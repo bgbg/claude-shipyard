@@ -28,6 +28,9 @@ Before generating, determine branch strategy:
 2. Generate plan using entire project as context
 3. **Write** specified output file (absolute path)
 
+## Short Mode (`--short`)
+For trivial issues, called by `/git-work-on-issue --skip-plan`. Write only: Title, Branch Strategy, Acceptance Criteria, and Open Questions only if a choice with two or more options exists. Skip the other sections and the Visual. The Acceptance Criteria are required because the `/git-pre-pr` gate needs them.
+
 ## Post-Generation
 If steps include sub-issues, offer to create them via `gh issue create` and update plan with actual numbers.
 
@@ -69,6 +72,7 @@ Rules:
 - `--from-issue <number|url>` or `<number>`: GitHub issue
 - `--tree` / `--no-tree`: Worktree preference (default: tree)
 - `--branch <name>`: Custom branch name
+- `--short`: Short plan for trivial issues (see Short Mode)
 - `--base <branch>`: Base branch to fork from. Resolution order: this flag → `CC_BASE_BRANCH` env var → repo default branch.
 
 ## Style

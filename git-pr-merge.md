@@ -15,7 +15,7 @@ Assume we are authenticated with GitHub. Run the commands without checking and d
    - Use this name in later cleanup steps (branch deletion, worktree removal). Validate that the user is on the correct branch.
 
 2) Fix outstanding review comments (on by default)
-   - If the conversation context contains code review comments (e.g., from `/gh-code-review`, `/code-review:code-review`, or `/copilot-review`), fix all of them before merging.
+   - If the conversation context contains code review comments (e.g., from `/code-review` or `/gh-code-review`), fix all of them before merging.
    - Commit the fixes using `/git-add-commit-push`.
    - Skip this step if `--no-fix` is passed.
 

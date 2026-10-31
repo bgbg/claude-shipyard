@@ -46,10 +46,10 @@ Create a well-formed GitHub Pull Request for the current project, ensuring the b
    - All of these are non-blocking — if any fail, log the error and continue
 
 6) Code review (on by default, skip with `--no-code-review`)
-   - Request `/copilot-review` first (remote, takes time), then immediately run `/code-review:code-review` (local — completes in chat, no waiting needed).
-   - Run `/gh-code-review --sleep 15` — this polls GitHub every minute for up to 15 minutes and stops as soon as the Copilot review appears. Do NOT proceed past this point until `/gh-code-review` has completed.
-   - If after 15 minutes no Copilot review has appeared on the PR, flag this to the user and ask whether to proceed with only the local review or wait longer.
-   - Fix all problems found in the reviews (both local and Copilot), then commit and push via `/git-add-commit-push`.
+   - This is the only place in the workflow that runs code review. `/plan-ok`, `/issues-run` and `/milestone-run` rely on it.
+   - Run `/code-review high <pr-number> --fix`. It reviews in chat and applies the fixes to the working tree.
+   - Re-run the tests, then commit and push via `/git-add-commit-push`.
+   - If the review found critical or serious problems, run one more round. Maximum 2 rounds.
 
 ## Heuristics
 - Prefer optimistic execution; let git/gh errors drive remediation.
@@ -57,8 +57,8 @@ Create a well-formed GitHub Pull Request for the current project, ensuring the b
 - Never swallow errors; print them verbatim and stop with clear next steps.
 
 ## Examples
-- `git-pr` → create PR, auto-generate title/body, request reviews.
-- `git-pr --no-code-review` → create PR without requesting reviews.
+- `git-pr` → create PR, auto-generate title/body, run code review.
+- `git-pr --no-code-review` → create PR without code review.
 - `git-pr --base "develop"` → create PR targeting the develop branch instead of main.
 - `git-pr --issues "123,456"` → create PR closing issues #123 and #456.
 - `git-pr --comment` → create PR and post summary comment to linked issue(s).
@@ -67,4 +67,4 @@ Create a well-formed GitHub Pull Request for the current project, ensuring the b
 - `--issues "123,456"`: Explicitly specify issue numbers to close (adds `Closes #<number>` footers to PR body). If not provided, infers from branch name pattern (e.g., `feature/123-add-auth` → issue #123).
 - `--base "<branch>"`: Target branch to merge into. Resolution order: this flag → `CC_BASE_BRANCH` env var → `main`.
 - `--comment`: Add a summary comment to linked issue(s) with PR details. (default: skip)
-- `--no-code-review`: Skip requesting code reviews after PR creation.
+- `--no-code-review`: Skip the code review after PR creation.

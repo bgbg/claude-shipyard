@@ -58,15 +58,12 @@ Execute a GitHub milestone end-to-end: plan, implement, review, merge, close —
    - Confirm the plan's `Base:` line matches the current integration branch. If it points to `main` or a stale branch, regenerate.
    - Re-read the issue from GitHub (`gh issue view`). Compare against the plan. If the issue was materially updated since the plan was created (new requirements, changed scope, new comments with decisions), regenerate the plan with `--base <integration-branch>`.
 
-8. **Implement** — Run `/plan-ok <number>` (it reads the base from the plan; `CC_BASE_BRANCH` is also exported as a safety net). On external blockers: print `BLOCKED: Issue #<number> — <description>`, comment on issue, mark blocked, move on. On technical failure: retry once, then mark `failed`.
+8. **Implement** — Run `/plan-ok <number> --no-pr` (it reads the base from the plan; `CC_BASE_BRANCH` is also exported as a safety net). On external blockers: print `BLOCKED: Issue #<number> — <description>`, comment on issue, mark blocked, move on. On technical failure: retry once, then mark `failed`.
 
 9. **Verify, Review, and Merge** (issue PR → integration branch, NOT main):
    - **Spec-conformance gate**: `/git-pre-pr --base <integration-branch>` — its spec-conformance gate (step 3) verifies the build against the issue's acceptance criteria (tests + `/verify` + spec critic), distinct from code review's "is this good code." If its verdict is `fail` or `incomplete`, fix and re-run (up to 2 cycles). Do not merge with unmet criteria; if still unmet after 2 cycles, set `status: needs-review`, record the failed criteria in `acceptance: unmet:[...]`, and stop without merging (do not block the wave).
-   - `/git-pr --base <integration-branch> --issues "<number>"`
-   - Request `/copilot-review`, then `/code-review:code-review`
-   - Wait up to 10 min for both reviews — poll inside this sub-agent and keep only the final outcome; do not surface per-minute status to the orchestrator.
-   - `/gh-code-review --retry` → fix issues → `/git-add-commit-push`
-   - Max 2 fix-review cycles, then escalate by setting `status: needs-review` in the summary (do not block the wave).
+   - `/git-pr --base <integration-branch> --issues "<number>"` — it runs `/code-review high --fix` and commits the fixes, max 2 rounds. Do not run another review.
+   - If critical or serious review problems remain after those 2 rounds, set `status: needs-review` in the summary (do not block the wave).
    - `/git-pr-merge` → `/pr-merged` → verify issue closed
    - `/git-pr-merge` automatically checks out the PR's base (the integration branch), so no `main` checkout happens here.
    - **Return** the step-5 summary as the sub-agent's entire output — nothing else.
@@ -87,8 +84,7 @@ Run only when all milestone issues are closed.
 13. **Open integration PR** — Run from inside the integration worktree: `git -C <integration-worktree-path> ...` for any local prep, then `gh pr create --base main --head <integration-branch>` (gh works from any cwd as long as the repo is correct; pass `-R <owner>/<repo>` if needed). Title: `Milestone <number>: <title>`. Body lists all closed issues (`Closes #<n>` for each). Use a HEREDOC for the body.
 
 14. **Final review** (optional but on by default):
-    - Run `/code-review:code-review --pr <pr-number>` for a local review of the cumulative diff.
-    - Optionally request `/copilot-review --pr <pr-number>`.
+    - Run `/code-review high <pr-number>` for a local review of the cumulative diff.
     - Surface findings to user. Wait for explicit user confirmation before proceeding.
     - Skip with `--no-final-review`.
 

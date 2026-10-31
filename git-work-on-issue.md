@@ -61,15 +61,18 @@ Prepare working on a GitHub issue by creating a properly named branch and annota
    - Print the branch name, base, and the clickable URL: `https://github.com/<owner>/<repo>/tree/<branch>`.
    - If `--tree`: Print the worktree location: `.trees/<issue-number>-<type>-<kebab-description>`.
    - If plan was found, indicate the plan source (GitHub comment or todo file).
-   - STOP HERE. Do not proceed to plan or edit code. The ground is now prepared for manual work.
+   - Do not plan or edit code in this command. Step 9 hands off to `/make-plan` (and to `/plan-ok` with `--skip-plan`).
 
 9) If --plan is set (Default: true) call /make-plan --issue <issue number> <either --tree or --no-tree> [--base <resolved-base> if non-default]
+   - With `--skip-plan`: add `--short` to the `/make-plan` call, then run `/plan-ok <issue number>` without waiting for approval. Exception: if the short plan has an Open Question with two or more options, stop and present it.
 
 ## Arguments (from {{ARGS}})
 - `--issue <number|url>`: Target issue identifier (flag form).
 - `<issue>`: Positional target issue identifier (number or GitHub issue URL).
 - `--tree`: Create branch in git worktree at `.trees/<issue-number>-<type>-<kebab-description>`.
 - `--base <branch>`: Base branch to fork from. Resolution order: this flag → `CC_BASE_BRANCH` env var → repo default branch.
+- `--skip-plan`: For trivial issues. Writes a short plan (branch strategy and acceptance criteria) and starts `/plan-ok` without waiting for plan approval.
+- `--no-plan`: Do not call `/make-plan`. Only report an existing plan (step 7) and stop.
 
 ## Heuristics
 - If the issue title starts with a ticket key like `ABC-123:`, strip the prefix and use the remainder for the slug, but keep the numeric GitHub issue id in the branch name.

@@ -71,7 +71,7 @@ notes: <one line, optional>
 Per-issue cycle:
 
 10. **Implement**: `/plan-ok <issue> --no-pr` — runs from inside the worktree. The plan's `Base:` line drives the branch base.
-11. **Pre-PR check + spec-conformance gate**: `/git-pre-pr` (with `--base <base>` if non-default). Its spec-conformance gate (step 3) verifies the build against the plan's acceptance criteria (tests + `/verify` + spec critic), distinct from code review's "is this good code." If the verdict is `fail` or `incomplete`, fix and re-run (up to 2 cycles). Do not open the PR or merge with unmet criteria; if still unmet after 2 cycles, escalate via `/say`, mark the issue `open-needs-review`, and move on (do not halt the run).
+11. **Pre-PR check + spec-conformance gate**: `/git-pre-pr` (with `--base <base>` if non-default). Its spec-conformance gate (step 3) verifies the build against the plan's acceptance criteria (tests + `/run` + spec critic), distinct from code review's "is this good code." If the verdict is `fail` or `incomplete`, fix and re-run (up to 2 cycles). Do not open the PR or merge with unmet criteria; if still unmet after 2 cycles, escalate via `/say`, mark the issue `open-needs-review`, and move on (do not halt the run).
 12. **Open PR**: `/git-pr --issues "<issue>"` (with `--base <base>` if non-default)
 13. **Review**: `/git-pr` in step 12 runs `/code-review high --fix` and commits the fixes, max 2 rounds. Do not run another review.
 14. **Escalate**: if critical or serious review problems remain after those 2 rounds, escalate via `/say`.
@@ -94,7 +94,7 @@ Per-issue cycle:
 - **Concurrency**: `--parallel` (max 3 at a time) applies only to isolated issues; it is ignored for issues running shared/inline.
 - **Isolation tie-break**: under `--auto`, when unsure, isolate.
 - **Max 2 fix-review cycles** per issue, then escalate via `/say`.
-- **Spec-conformance gate** runs inside `/git-pre-pr` (verifies the build against the issue's acceptance criteria: tests + `/verify` + spec critic). Its verdict must be `pass` before opening the PR/merge; `fail`/`incomplete` → fix and re-run, max 2 cycles, then escalate via `/say` and mark `open-needs-review`. No merge with unmet criteria.
+- **Spec-conformance gate** runs inside `/git-pre-pr` (verifies the build against the issue's acceptance criteria: tests + `/run` + spec critic). Its verdict must be `pass` before opening the PR/merge; `fail`/`incomplete` → fix and re-run, max 2 cycles, then escalate via `/say` and mark `open-needs-review`. No merge with unmet criteria.
 - **Never force-push** without explicit user confirmation.
 - **Never skip hooks** (`--no-verify`).
 - **Compact between issues**: run `/compact` at every issue-to-issue transition (Phase 2 step 16) to keep the orchestrator's context lean; skip after the final issue.

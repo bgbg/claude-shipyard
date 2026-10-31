@@ -1,3 +1,7 @@
+---
+description: Report development status by correlating git branches and worktrees with todo__<n>.md plan files
+---
+
 # Project Status Report: Branches vs Todo Files
 
 Analyze git branches/worktrees and todo files to report development status.
@@ -30,7 +34,7 @@ Analyze git branches/worktrees and todo files to report development status.
    - Summarize: completion status, pending items, deviations
 
 5. **Check merge status**
-   - Determine if branch is merged into `main`
+   - Determine if branch is merged into the base branch (`CC_BASE_BRANCH`, else the repo default branch)
    - For merged branches: recommend removal
 
 6. **Report orphaned items**
@@ -49,7 +53,7 @@ Compact report with sections:
 - `<branch>` ↔ `<todo_file>`: brief status, completion summary
 
 ### Merged (Can Remove)
-- `<branch>` ↔ `<todo_file>`: merged into main
+- `<branch>` ↔ `<todo_file>`: merged into <base>
 
 ### Orphaned Todo Files
 - `<todo_file>`: no corresponding branch found, action needed?
@@ -60,4 +64,4 @@ Compact report with sections:
 ## Notes
 - Issue numbers in branch names and todo filenames must match for correlation
 - Analysis compares todo plan steps against actual branch commits and code changes
-- Only check merge status against `main` branch
+- Check merge status against the resolved base branch only

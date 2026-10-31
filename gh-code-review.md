@@ -51,6 +51,8 @@ Read code review comments from the current PR (or specified PR), analyze them, a
 
 ## Arguments (from {{ARGS}})
 - `--pr <number>`: Specify PR number explicitly. If not provided, detect from current branch.
+- `--sleep <minutes>`: Wait up to N minutes for reviews to appear, checking each minute (step 1a). Default: no wait.
+- `--retry`: If no reviews are found, wait once (3 minutes, or the `--sleep` value) and fetch again.
 
 ## Heuristics
 - Prefer fast execution: single GraphQL query fetches all review data efficiently

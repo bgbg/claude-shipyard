@@ -27,7 +27,7 @@ Create a well-formed GitHub Pull Request for the current project, ensuring the b
    - Generate body:
      - Concatenate all commit messages between `<base>..HEAD` using `git log --pretty=%B`
      - Never include emojis or `Signed-off-by` or any signature lines in the PR body.
-     - **CRITICAL - Issue linking**: The PR body MUST include `Closes #<issue-number>` footer:
+     - **Issue linking**: The PR body includes a `Closes #<issue-number>` footer, so merging the PR closes the issue:
        - If `--issues` parameter provided: add `Closes #<number>` for each issue
        - Otherwise, infer issue number from branch name (e.g., `feature/123-add-auth` → `Closes #123`)
        - If no issue number can be determined, ask once whether to proceed without an issue link; abort if declined.

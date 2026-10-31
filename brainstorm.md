@@ -51,7 +51,7 @@ Guide the user through an iterative ideation session for a large milestone, feat
 
    **Part B — Spec** (the verifiable contract — required):
      - **Requirements**: testable statements, preferably Given/When/Then.
-     - **Acceptance criteria**: a checklist where every item names its verification method (test, command, `/verify` steps, or manual check). These compile 1:1 into per-issue acceptance criteria in `/milestone-plan`.
+     - **Acceptance criteria**: a checklist where every item names its verification method (test, command, `/run` steps, or manual check). These compile 1:1 into per-issue acceptance criteria in `/milestone-plan`.
      - **Invariants**: properties that must always hold. Flag any that could be mechanically enforced — these are the candidates for `/update-config` hooks (the environment layer).
      - **Non-goals**: explicitly out of scope.
      - **Interfaces / contracts**: APIs, data shapes, schemas (where relevant).

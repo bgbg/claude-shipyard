@@ -26,7 +26,7 @@ Stage changes, generate a commit message, commit, and push for the current proje
    - If `--message` provided: use it exactly
    - Default (simple mode): `<type>: <brief description>` using file paths and their names. If total diff is shorter than 1000 characters, use that to generate a more detailed message, unless --fast is set.
    - If `--detailed`: full conventional commit with body and analysis
-   - Append issue reference if user confirmed in step 3
+   - Append the issue reference from step 3, if one was found
 
 5) Commit and push:
    - Commit: `git commit -m "<message>"`
@@ -43,4 +43,4 @@ Stage changes, generate a commit message, commit, and push for the current proje
 - `--closes`: Use `Closes #<NUMBER>` instead of `Related to #<NUMBER>` for issue references
 
 ## Session Behavior
-After completing the git add-commit-push operation, for the rest of the session, do not add, commit, or push any changes unless explicitly asked to do so by the user.
+After completing the git add-commit-push operation, for the rest of the session, do not add, commit, or push any changes unless explicitly asked to do so by the user or by a calling command (such as `/git-pr` or `/plan-ok`).

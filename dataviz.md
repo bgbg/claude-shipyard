@@ -4,7 +4,7 @@ description: Create or revise a publication-quality data visualization following
 
 # Data Visualization Skill
 
-Create or revise publication-quality figures for this research project. Every figure must follow these rules strictly.
+Create or revise publication-quality figures for the current project. Every figure must follow these rules strictly.
 
 ## Core Philosophy
 
@@ -59,7 +59,7 @@ Every figure must communicate at three levels:
 - Sans-serif font family (Helvetica, Source Sans, or system sans-serif).
 - Base font size: 10pt for body text, axis labels. Title: 12-13pt, bold.
 - `figure.dpi`: 300 for saved files.
-- Save both PNG and SVG to `bhol_public_sphere/figures/`.
+- Save both PNG and SVG to the project's figures directory (ask if there is none).
 - Use `constrained_layout=True` or `bbox_inches="tight"` to prevent clipping.
 
 ### Matplotlib Setup Block
@@ -91,7 +91,7 @@ Then after creating axes, always call `sns.despine(ax=ax)`.
 
 ## Output
 
-- Save to `bhol_public_sphere/figures/` as both `.png` (dpi=300) and `.svg`.
+- Save to the project's figures directory as both `.png` (dpi=300) and `.svg`.
 - Use descriptive filenames: `shabbat_weekly_pattern.png`, not `fig1.png`.
 
 ## Anti-Patterns (never do these)

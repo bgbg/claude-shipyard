@@ -17,7 +17,7 @@ Take a design document (from `/brainstorm`, a markdown file, or free-form descri
 
 3. **Decompose into issues** — Each issue should be sized for a single PR (bot-reviewed, so can be meatier than human-atomic). Balance granularity vs chunk size. Each issue needs:
    - Clear title, description with context/scope
-   - **Acceptance criteria** carried down from the design's Spec: each issue gets the slice of the spec's acceptance criteria it owns, copied as a checklist where every item names its verification method (test/command/`/verify`/manual check). Every spec criterion must land in exactly one issue — if a criterion maps to no issue the decomposition is incomplete; if an issue has no criteria it is underspecified. If the input is a free-form description with no spec, write the criteria here before creating the issue.
+   - **Acceptance criteria** carried down from the design's Spec: each issue gets the slice of the spec's acceptance criteria it owns, copied as a checklist where every item names its verification method (test/command/`/run`/manual check). Every spec criterion must land in exactly one issue — if a criterion maps to no issue the decomposition is incomplete; if an issue has no criteria it is underspecified. If the input is a free-form description with no spec, write the criteria here before creating the issue.
    - **Invariants** from the spec the issue must preserve (note any that are hook candidates).
    - Dependencies on other issues (`Blocked by #N` / `Depends on #N`)
    - `blocked:user-action` label if requiring user action (API keys, manual setup, etc.)

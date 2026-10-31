@@ -22,7 +22,7 @@ Perform a fast, high-signal self-review of the current branch before opening a P
    - Extract the **Acceptance Criteria** (each should name a verification method). If the plan/issue has none, report the spec as unverifiable, recommend adding criteria, and set the verdict to `incomplete`.
    - Verify each criterion against the actual build:
      - **Tests/commands**: run the criterion's named test or command (the suite run in step 0 may already cover some).
-     - **Behavior**: run `/verify` to exercise the change and observe real runtime behavior for criteria that describe it.
+     - **Behavior**: use `/run` to launch the app and exercise the change and observe real runtime behavior for criteria that describe it.
      - **Spec critic** (higher assurance): spawn one independent sub-agent that judges the diff against the criteria and returns a per-criterion verdict (met / not-met / unclear) with evidence. It does not assess code quality.
    - **Verdict** — report per-criterion `met` / `not-met` / `unverified`, plus an overall gate result:
      - `pass` — every criterion met.
@@ -59,7 +59,7 @@ Perform a fast, high-signal self-review of the current branch before opening a P
 
 ## Arguments (from {{ARGS}})
 - `--area-threshold <n>`: Flag when more than N top-level areas are touched (default: 8).
-- `--no-tests`: Skip running unit tests and assume all tests pass.
+- `--no-tests`: Skip running tests. The spec-conformance gate then reports `incomplete` (step 3).
 - `--fast`: Skip tests and suggestions, only run critical checks. Produces a minimal report.
 - `--base <branch>`: Base branch to compare against. Resolution order: this flag → `CC_BASE_BRANCH` env var → repo default branch.
 

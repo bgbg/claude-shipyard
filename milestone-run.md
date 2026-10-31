@@ -61,7 +61,7 @@ Execute a GitHub milestone end-to-end: plan, implement, review, merge, close —
 8. **Implement** — Run `/plan-ok <number> --no-pr` (it reads the base from the plan; `CC_BASE_BRANCH` is also exported as a safety net). On external blockers: print `BLOCKED: Issue #<number> — <description>`, comment on issue, mark blocked, move on. On technical failure: retry once, then mark `failed`.
 
 9. **Verify, Review, and Merge** (issue PR → integration branch, NOT main):
-   - **Spec-conformance gate**: `/git-pre-pr --base <integration-branch>` — its spec-conformance gate (step 3) verifies the build against the issue's acceptance criteria (tests + `/verify` + spec critic), distinct from code review's "is this good code." If its verdict is `fail` or `incomplete`, fix and re-run (up to 2 cycles). Do not merge with unmet criteria; if still unmet after 2 cycles, set `status: needs-review`, record the failed criteria in `acceptance: unmet:[...]`, and stop without merging (do not block the wave).
+   - **Spec-conformance gate**: `/git-pre-pr --base <integration-branch>` — its spec-conformance gate (step 3) verifies the build against the issue's acceptance criteria (tests + `/run` + spec critic), distinct from code review's "is this good code." If its verdict is `fail` or `incomplete`, fix and re-run (up to 2 cycles). Do not merge with unmet criteria; if still unmet after 2 cycles, set `status: needs-review`, record the failed criteria in `acceptance: unmet:[...]`, and stop without merging (do not block the wave).
    - `/git-pr --base <integration-branch> --issues "<number>"` — it runs `/code-review high --fix` and commits the fixes, max 2 rounds. Do not run another review.
    - If critical or serious review problems remain after those 2 rounds, set `status: needs-review` in the summary (do not block the wave).
    - `/git-pr-merge` → `/pr-merged` → verify issue closed
@@ -110,7 +110,7 @@ Run only when all milestone issues are closed.
 
 ## Constraints
 - Max 3 parallel issues, max 2 fix-review cycles per issue, max 2 spec-conformance-gate cycles per issue
-- The spec-conformance gate runs inside `/git-pre-pr` (verifies the build against the issue's acceptance criteria: tests + `/verify` + spec critic). Its verdict must be `pass` before merge — `fail`/`incomplete` blocks. It is separate from code review. No merge with unmet acceptance criteria.
+- The spec-conformance gate runs inside `/git-pre-pr` (verifies the build against the issue's acceptance criteria: tests + `/run` + spec critic). Its verdict must be `pass` before merge — `fail`/`incomplete` blocks. It is separate from code review. No merge with unmet acceptance criteria.
 - Always use worktrees. Never force-push without confirmation.
 - Blocked issues don't block the pipeline. Single failure doesn't stop the milestone.
 - Failed dependencies mark dependents as `blocked`.

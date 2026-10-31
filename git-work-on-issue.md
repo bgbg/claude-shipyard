@@ -63,7 +63,7 @@ Prepare working on a GitHub issue by creating a properly named branch and annota
    - If plan was found, indicate the plan source (GitHub comment or todo file).
    - Do not plan or edit code in this command. Step 9 hands off to `/make-plan` (and to `/plan-ok` with `--skip-plan`).
 
-9) If --plan is set (Default: true) call /make-plan --issue <issue number> <either --tree or --no-tree> [--base <resolved-base> if non-default]
+9) If --plan is set (Default: true) call /make-plan --from-issue <issue number> --branch <derived-branch> <either --tree or --no-tree> [--base <resolved-base> if non-default]
    - With `--skip-plan`: add `--short` to the `/make-plan` call, then run `/plan-ok <issue number>` without waiting for approval. Exception: if the short plan has an Open Question with two or more options, stop and present it.
 
 ## Arguments (from {{ARGS}})
@@ -80,6 +80,6 @@ Prepare working on a GitHub issue by creating a properly named branch and annota
 - If the derived branch already exists locally or remotely, append a short timestamp suffix `-yyyymmddHHMM`.
 
 ## Examples
-- `work-on 42` → reads issue, creates `fix/42-login-error` (if labeled `bug`), pushes, and comments with branch link.
-- `work-on --issue 42 --tree` → same as above but creates worktree in `.trees/42-fix-login-error`.
-- `work-on https://github.com/<owner>/<repo>/issues/42` → same as first example.
+- `/git-work-on-issue 42` → reads issue, creates `fix/42-login-error` (if labeled `bug`), pushes, and comments with branch link.
+- `/git-work-on-issue --issue 42 --tree` → same as above but creates worktree in `.trees/42-fix-login-error`.
+- `/git-work-on-issue https://github.com/<owner>/<repo>/issues/42` → same as first example.

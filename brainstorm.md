@@ -25,10 +25,13 @@ Guide the user through an iterative ideation session for a large milestone, feat
    - A dimension is only "covered" when you could write a falsifiable acceptance criterion for it. If you can't yet state the test, that gap is your next question. This is the forcing function — an underspecified requirement is one you can't write a check for.
    - Be proactive: read relevant codebase files, check CLAUDE.md, explore architecture, search the web — do whatever is needed to ask informed questions and propose concrete ideas.
    - Propose ideas and directions for the user to react to when it adds value. Act as a collaborator, not an interviewer.
+   - **Offer options.** Every question offers 2–3 concrete options (A/B/C), each with a one-line implication, and marks the recommended one. The user can then answer with a letter, pick a non-default option, or see from the options that something is off.
+   - **When the user asks a question, only answer it.** Do not add the next question or a clarity score to that answer. Resume asking only after the user settles the point or says to continue.
    - **Do NOT modify any files during this phase.** Read-only access to codebase and web.
 
 4. **Termination conditions**
    - **The score may only reach 90 or more when every requirement is testable** — i.e. you can state a falsifiable acceptance criterion (and its verification method) for each. If any requirement can't yet be made testable, clarity is below 90 by definition; keep asking.
+   - **Gap sweep before 90.** Before the score reaches 90, review the whole conversation for what was not discussed: unknown unknowns, stakeholders, failure modes, dependencies, and dimensions from step 3 that were never covered. Show the list. Adjust the score down if the sweep finds real gaps, and ask about the most important one.
    - **Score reaches 99**: Say "I have all the information I need. Is there anything else you want to add?" Then proceed to Phase 2 after user confirms.
    - **User says stop/enough/go ahead**: Proceed to Phase 2 immediately.
    - No limit on number of questions.

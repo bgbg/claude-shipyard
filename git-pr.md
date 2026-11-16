@@ -26,7 +26,7 @@ Create a well-formed GitHub Pull Request for the current project, ensuring the b
      - If branch name matches pattern `feature/123-foo` or `fix/456-bar`, extract issue number for later use
    - Generate body:
      - Concatenate all commit messages between `<base>..HEAD` using `git log --pretty=%B`
-     - Never include emojis or `Signed-off-by` or any signature lines in the PR body.
+     - Never include emojis in the PR body.
      - **Issue linking**: The PR body includes a `Closes #<issue-number>` footer, so merging the PR closes the issue:
        - If `--issues` parameter provided: add `Closes #<number>` for each issue
        - Otherwise, infer issue number from branch name (e.g., `feature/123-add-auth` → `Closes #123`)

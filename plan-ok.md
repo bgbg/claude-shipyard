@@ -26,7 +26,7 @@ Start implementing the plan, adhering to it and the user's instructions.
 
 ### 4) Post plan to GitHub (in parallel)
 - `gh issue edit <issue-number> --add-label "work-in-progress" --remove-label "planning"`
-- `gh issue comment <issue-number> --body "<plan>"` (heredoc, no signature lines)
+- `gh issue comment <issue-number> --body "<plan>"` (heredoc)
 
 ### 5) Setup branch and worktree
 Use the resolved base branch from step 3.

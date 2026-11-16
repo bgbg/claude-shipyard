@@ -29,7 +29,7 @@ Before generating, determine branch strategy:
 3. **Write** specified output file (absolute path)
 
 ## Short Mode (`--short`)
-For trivial issues, called by `/git-work-on-issue --skip-plan`. Write only: Title, Branch Strategy, Acceptance Criteria, and Open Questions only if a choice with two or more options exists. Skip the other sections and the Visual. The Acceptance Criteria are required because the `/git-pre-pr` gate needs them.
+For trivial issues, called by `/git-work-on-issue --skip-plan`. Write only: Title, Branch Strategy, Acceptance Criteria, and Open Questions only if a choice with two or more options exists. Skip the other sections. The Acceptance Criteria are required because the `/git-pre-pr` gate needs them.
 
 ## Post-Generation
 If steps include sub-issues, offer to create them via `gh issue create` and update plan with actual numbers.
@@ -47,25 +47,6 @@ Required sections:
 8. **Acceptance Criteria** (required): a checklist where every item is a falsifiable statement that names its verification method — the test to run, the command/`/run` steps to execute, or the manual check. In issue mode, carry these down from the issue's spec/acceptance criteria (set by `/milestone-plan`); if the issue has none, write them and note the gap. These are what `/milestone-run` verifies the PR against before merge — not optional.
 
 Optional (add only if they reduce ambiguity): Scope/Non-Goals, Requirements/Constraints, Risks/Mitigations, Dependencies, Deliverables, Rollout/Backout.
-
-## Visual (optional)
-
-Add a `## Visual` section **only when a picture genuinely clarifies the plan** — multi-module work, non-trivial flows, schema changes, or new components with non-obvious relationships. Skip it for single-file changes, simple bug fixes, or anything you could describe in one sentence. Never pad a plan with filler diagrams.
-
-Use one (rarely two) of the following, in this order of preference:
-
-- **Mermaid diagrams** — preferred because GitHub renders them natively in issues, PRs, and Markdown. Pick the type that matches the actual question the reader has:
-  - `graph TD` / `graph LR` for component or module relationships
-  - `sequenceDiagram` for an interaction across services, processes, or actors
-  - `erDiagram` or `classDiagram` for a data model
-  - `flowchart` for branching logic that's hard to describe in prose
-- **Markdown file tree** — nested bullets showing new/touched paths, grouped by top-level directory. Use when the change is primarily structural (new module, large refactor).
-
-Rules:
-- Keep diagrams under ~15 nodes. If you need more, split into two diagrams or drop it.
-- Label nodes with the actual symbol/file/component name from the codebase — no placeholders like "Service A".
-- Mark anything that doesn't exist yet (e.g. `NewWorker[NewWorker (new)]`) so reviewers can tell at a glance what's the delta.
-- One diagram, not a gallery. The goal is the fastest possible read, not a documentation set.
 
 ## Arguments (from {{ARGS}})
 - `<output-file>`: Output path (general mode)

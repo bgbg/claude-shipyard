@@ -51,7 +51,6 @@ Perform a fast, high-signal self-review of the current branch before opening a P
 6) Output
    - Short markdown report with: Summary, Spec-conformance (overall gate verdict + per-criterion results, when working on an issue), Changes, Risks, Tests, Checklist.
    - When the spec-conformance verdict is `fail` or `incomplete`, lead the report with it — it is the blocking signal callers act on.
-   - Do not include any signature lines or trailers (e.g., `Signed-off-by:`).
 
 ## Performance
 - **`--fast` mode**: Skip tests, skip suggestions (step 5), only run critical checks (secrets, lockfile, exception handling). Produce a minimal report. The spec-conformance gate (step 3) cannot fully run without tests, so it reports `incomplete` — do not rely on `--fast` when the acceptance-criteria gate must pass.

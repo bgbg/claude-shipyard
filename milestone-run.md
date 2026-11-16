@@ -111,7 +111,7 @@ Run only when all milestone issues are closed.
 ## Constraints
 - Max 3 parallel issues, max 2 fix-review cycles per issue, max 2 spec-conformance-gate cycles per issue
 - The spec-conformance gate runs inside `/git-pre-pr` (verifies the build against the issue's acceptance criteria: tests + `/run` + spec critic). Its verdict must be `pass` before merge — `fail`/`incomplete` blocks. It is separate from code review. No merge with unmet acceptance criteria.
-- Always use worktrees. Never force-push without confirmation.
+- Always use worktrees.
 - Blocked issues don't block the pipeline. Single failure doesn't stop the milestone.
 - Failed dependencies mark dependents as `blocked`.
 - Network/auth errors: retry once, then escalate.

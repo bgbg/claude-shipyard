@@ -22,7 +22,7 @@ These are personal commands that have evolved over months of daily use. They lea
 - **`/pr-merged`** — Post-merge cleanup.
 
 ### Multi-issue orchestration
-- **`/issues-run`** — Run a full plan→implement→review→merge cycle over a list of issues. Sequential by default, `--parallel` for waves. Plans first (where humans intervene most), then execute.
+- **`/issues-run`** — Run a full plan→implement→review cycle over a list of issues. Sequential by default, `--parallel` for waves. Plans first (where humans intervene most), then execute. PRs into the default branch are left for you to merge (`--merge` to auto-merge); PRs into other bases merge automatically.
 - **`/milestone-plan`** — Turn a brainstorm or design doc into a GitHub milestone with issues and a dedicated integration branch + worktree.
 - **`/milestone-run`** — Execute a milestone end-to-end. Issue PRs target the milestone integration branch, never `main`, until everything's ready.
 - **`/brainstorm`** — Iterative brainstorm for large milestones, features, or architectural decisions.
@@ -59,7 +59,8 @@ Restart Claude Code and the commands appear as `/git-pre-pr`, `/issues-run`, etc
 - **Commands compose.** Big commands like `/issues-run` and `/milestone-run` are thin orchestrators — they delegate to the smaller commands. If you fix a bug in `/git-pre-pr`, every workflow benefits.
 - **Worktrees by default.** Long-running work happens in `.trees/<branch>` so the user's main checkout is never disturbed.
 - **`CC_BASE_BRANCH` env var** flows through the chain so milestone integration branches (or any non-`main` base) are honored end-to-end.
-- **Humans in the loop.** Commands `/say` when they need attention, and Open Questions in plans are surfaced explicitly rather than guessed.
+- **Humans in the loop.** Commands `/say` when they need attention, and Open Questions in plans are surfaced explicitly rather than guessed. Nothing merges into the default branch unattended.
+- **Hard rules live in hooks, not prose.** "Never force-push" and "never `--no-verify`" used to be sentences in these files; they are now a `PreToolUse` hook on `Bash` in the author's settings, because a hook holds in every permission mode and a sentence does not. Prompt text here is guidance.
 - **Bias for `gh`.** `gh` over the GitHub REST API; assume auth is configured.
 
 ## Contributing

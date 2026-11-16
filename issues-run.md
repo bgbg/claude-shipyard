@@ -1,5 +1,5 @@
 ---
-description: Work on a list of GitHub issues end-to-end (plan, implement, review, merge). Claims all issues as work-in-progress immediately, then auto-decides per issue between a shared context and isolated sub-agents (`--shared`/`--isolated` to force); `--parallel` for concurrency. Use when the user lists multiple issue numbers and wants the full cycle for each.
+description: Work on a list of GitHub issues end-to-end (plan, implement, review; merge unless the base is the repo default branch). Claims all issues as work-in-progress immediately, then auto-decides per issue between a shared context and isolated sub-agents (`--shared`/`--isolated` to force); `--parallel` for concurrency. Use when the user lists multiple issue numbers and wants the full cycle for each.
 ---
 
 # Issues Run
@@ -14,7 +14,8 @@ Execute multiple GitHub issues end-to-end: for each issue, run the full cycle �
 - `--parallel`: run isolated issues concurrently (max 3 at a time). Applies only to issues that run isolated — all of them under `--isolated`, the isolated subset under `--auto`; ignored for issues running shared/inline.
 - `--no-reorder`: Keep the user-specified order. Default: allow reordering when dependencies suggest a better order.
 - `--base <branch>`: Base branch for all issues. Default: `CC_BASE_BRANCH` env var, else repo default branch.
-- `--no-merge`: Stop after PR is approved; do not merge. Useful when the user wants to merge manually.
+- `--merge`: Also merge PRs whose base is the repo default branch. Default: a PR into the default branch is left open for the user (`/git-pr-merge` from the issue's worktree merges and cleans up); a PR into any other base (e.g. a milestone integration branch) merges automatically.
+- `--no-merge`: Never merge, whatever the base.
 - `--dry-run`: Print the planned execution order and exit without doing work.
 
 ## Behavior
@@ -30,7 +31,7 @@ Execute multiple GitHub issues end-to-end: for each issue, run the full cycle �
    - Unless `--no-reorder`: consider whether a different order would be better. Signals to weigh:
      - **Dependencies**: scan each issue body for `Blocked by #N` / `Depends on #N` references among the listed issues.
      - **Other considerations**: shared files/areas (do related issues together), risk (land low-risk first), size (quick wins first), or any ordering hint in the issues themselves.
-     - If a better order emerges, propose it with a one-line rationale and ask for confirmation. If the user does not respond within a reasonable wait, fall back to user-specified order.
+     - If a better order emerges, propose it with a one-line rationale and ask for confirmation.
    - For isolated issues run with `--parallel`: group into waves by dependency (issues with no unmet deps among the list go in wave 1, etc.). Max 3 per wave.
 5. Print the resolved plan: ordered list (or waves) + base branch + execution mode. If `--dry-run`, exit here (nothing was claimed; no work done).
 
@@ -50,7 +51,7 @@ Skip under `--shared` (everything inline) or `--isolated` (everything isolated).
    - **isolated** when the plan has many steps, touches many files, has a large blast radius, carries Open Questions, or the issue is labeled `feature`/`enhancement`/`refactor`/`epic`; also lean isolated when the overall batch is large (protect the orchestrator's context).
    - **shared** when the plan is tiny (1–2 steps, ~1 file) and the task is a chore/doc/typo/trivial fix.
    - **Tie-break**: when unsure, choose **isolated** — context hygiene is the safer failure mode.
-9. Print a decision table (Issue | mode | one-line rationale). Brief wait for the user to veto or override; if no response, proceed with the chosen modes.
+9. Print a decision table (Issue | mode | one-line rationale) and proceed. The user overrides by re-running with `--shared` or `--isolated`.
 
 ### Phase 2: Develop → Verify → PR → Review → Merge → Cleanup
 Run the per-issue cycle below for each issue. **How** it runs depends on the issue's mode from Phase 1.5:
@@ -75,16 +76,16 @@ Per-issue cycle:
 12. **Open PR**: `/git-pr --issues "<issue>"` (with `--base <base>` if non-default)
 13. **Review**: `/git-pr` in step 12 runs `/code-review high --fix` and commits the fixes, max 2 rounds. Do not run another review.
 14. **Escalate**: if critical or serious review problems remain after those 2 rounds, escalate via `/say`.
-15. **Merge and cleanup** (skip if `--no-merge`): `/git-pr-merge` → `/pr-merged`. Verify the issue is closed and the worktree is removed.
-16. **Compact between issues**: after an issue's cycle finishes (merged, or marked `open-needs-review`/`blocked`/`failed`) and **before starting the next issue**, run `/compact` to keep the orchestrator's context lean across a long run. Do this at every issue-to-issue transition; skip it after the final issue (go straight to Phase 4). It matters most for **shared/inline** issues, whose full cycle accumulates in the shared context; **isolated** issues already return only the compact summary, but compacting between them is still cheap and safe. Nothing is lost: plans live in `todo__<issue>.md` and state lives on GitHub, so a compacted context can resume the run.
+15. **Merge and cleanup**: only when the base is not the repo default branch, or `--merge` was given; never under `--no-merge`. `/git-pr-merge` → `/pr-merged`. Verify the issue is closed and the worktree is removed. Otherwise leave the PR open with status `open` and keep the worktree — the user merges with `/git-pr-merge`.
 
 ### Phase 3: Human intervention (applies throughout)
 - Whenever the run hits a blocker that needs the user (unanswered plan questions, failing tests after retries, unresolved review feedback, merge conflicts, auth failures), call `/say` with a short message naming the issue and the blocker, then wait for the user.
 - Examples: `/say "Issue 727 needs your input on the plan"`, `/say "Issue 782 has merge conflicts"`.
 
 ### Phase 4: Summary
-17. After all issues finish (or are blocked), print a table:
-    - Issue | Mode (`isolated`/`shared`) | Branch | PR | Status (`merged` / `open-needs-review` / `blocked` / `failed`)
+16. After all issues finish (or are blocked), print a table:
+    - Issue | Mode (`isolated`/`shared`) | Branch | PR | Status (`merged` / `open` / `open-needs-review` / `blocked` / `failed`)
+    - For `open` PRs, print the `/git-pr-merge` command per issue (with its worktree path).
     - List any blocked/failed issues with the specific reason. For `open-needs-review` due to unmet acceptance criteria, name the failed criteria.
 
 ## Constraints
@@ -95,9 +96,7 @@ Per-issue cycle:
 - **Isolation tie-break**: under `--auto`, when unsure, isolate.
 - **Max 2 fix-review cycles** per issue, then escalate via `/say`.
 - **Spec-conformance gate** runs inside `/git-pre-pr` (verifies the build against the issue's acceptance criteria: tests + `/run` + spec critic). Its verdict must be `pass` before opening the PR/merge; `fail`/`incomplete` → fix and re-run, max 2 cycles, then escalate via `/say` and mark `open-needs-review`. No merge with unmet criteria.
-- **Never force-push** without explicit user confirmation.
-- **Never skip hooks** (`--no-verify`).
-- **Compact between issues**: run `/compact` at every issue-to-issue transition (Phase 2 step 16) to keep the orchestrator's context lean; skip after the final issue.
+- **No unattended merge into the default branch**: PRs into the repo default branch stay open for the user unless `--merge`. PRs into other bases merge automatically.
 - A single failed/blocked issue does NOT halt the rest of the run — mark it and continue.
 - No emojis, no time estimates in the summary.
 
@@ -105,5 +104,5 @@ Per-issue cycle:
 - `/issues-run 727 782 783` — auto mode: claim all three immediately, plan, then decide per issue whether to isolate or run inline, in dependency-aware order.
 - `/issues-run 727,782,783 --shared` — handle all three inline in one shared context (good for small, unrelated chores).
 - `/issues-run 727 782 783 --isolated --parallel` — each issue in its own sub-agent, up to 3 concurrent.
-- `/issues-run 727 782 --no-merge` — open PRs and pass review, but stop before merge.
+- `/issues-run 727 782 --merge` — also merge the PRs into the default branch instead of leaving them for `/git-pr-merge`.
 - `/issues-run 727 782 783 --dry-run` — claim nothing; show the planned order and modes, then exit.

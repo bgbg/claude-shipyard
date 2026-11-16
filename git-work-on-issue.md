@@ -45,7 +45,6 @@ Prepare working on a GitHub issue by creating a properly named branch and annota
      - `git push -u origin <derived-branch>`
      - `gh issue edit <issue> --add-label "work-in-progress"`
      - `gh issue comment <issue> --body "Starting work on this in branch [<derived-branch>](https://github.com/<owner>/<repo>/tree/<derived-branch>)."`
-   - Do not include any signature lines (e.g., `Signed-off-by`).
 
 7) Locate plan
    - **Skip this step entirely if `--plan` is true (default)** — `/make-plan` in step 9 will find or create the plan, making this step redundant.

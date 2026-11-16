@@ -15,15 +15,6 @@ Read code review comments from the current PR (or specified PR), analyze them, a
    - If no PR found, abort with clear message.
    - If PR is closed/merged, still proceed (reviews may still be useful).
 
-1a) (Optional) if user asked to sleep (--sleep 5), sleep that amount of MINUTES before proceeding. Default: don't sleep.
-   - If sleep is requested, print a timestamped message showing when sleep started and the target duration
-   - Sleep intelligently: check every minute if code reviews exist
-   - If reviews are found during sleep period, immediately stop sleeping and proceed
-   - If no reviews found after full sleep duration, proceed to fetch anyway
-   - Print status update each minute: "Sleep check X/Y: [reviews found | no reviews yet]"
-   - If sleep is not requested, skip this step entirely
-
-
 2) Fetch review comments (single GraphQL query)
    - Execute single GraphQL query via `gh api graphql` to fetch:
      - PR reviews (state, author, body, submittedAt)
@@ -31,7 +22,7 @@ Read code review comments from the current PR (or specified PR), analyze them, a
      - Review threads grouped by path
    - Query filters out PENDING reviews server-side.
    - Parse JSON response to extract all review data.
-   - If no review is found, and there is a --retry flag, wait a bit and try again. Waiting time is 3 minutes by default, unless --sleep is provided. Retry only once. If no review is found after the retry, abort with a message that no reviews were found.
+   - If no review is found, report that and stop.
 
 3) Analyze and group by severity
    - **Critical**: Security issues, breaking changes, data loss risks, exception swallowing, missing error handling
@@ -49,10 +40,9 @@ Read code review comments from the current PR (or specified PR), analyze them, a
    - **Do not edit code** - only summarize findings
    - After summarizing, ask the user what they want to do next (e.g., address specific issues, create fixes, etc.)
 
-## Arguments (from {{ARGS}})
+## Arguments (from $ARGUMENTS)
 - `--pr <number>`: Specify PR number explicitly. If not provided, detect from current branch.
-- `--sleep <minutes>`: Wait up to N minutes for reviews to appear, checking each minute (step 1a). Default: no wait.
-- `--retry`: If no reviews are found, wait once (3 minutes, or the `--sleep` value) and fetch again.
+- `<url>`: PR URL, as an alternative to `--pr`.
 
 ## Heuristics
 - Prefer fast execution: single GraphQL query fetches all review data efficiently
@@ -64,4 +54,3 @@ Read code review comments from the current PR (or specified PR), analyze them, a
 - `gh-code-review` → analyze reviews for current branch's PR
 - `gh-code-review --pr 123` → analyze reviews for PR #123
 - `gh-code-review https://github.com/<owner>/<repo>/pull/211` → analyze reviews for PR #211
-- `gh-code-review --sleep 5` → sleep for 5 minutes before analyzing reviews

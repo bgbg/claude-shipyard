@@ -11,7 +11,7 @@ Guide the user through an iterative ideation session for a large milestone, feat
 ### Phase 1: Ideation (read-only)
 
 1. **Receive initial description**
-   - Accept the user's initial idea from `{{ARGS}}` or from conversation context.
+   - Accept the user's initial idea from `$ARGUMENTS` or from conversation context.
    - If no description provided, ask for one.
 
 2. **Anchor with "why"**

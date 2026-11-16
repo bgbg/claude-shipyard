@@ -4,7 +4,7 @@ description: Create or revise a publication-quality data visualization following
 
 # Data Visualization Skill
 
-Create or revise publication-quality figures for the current project. Every figure must follow these rules strictly.
+Create or revise publication-quality figures for the current project. Every figure follows these rules.
 
 ## Core Philosophy
 
@@ -15,9 +15,9 @@ Create or revise publication-quality figures for the current project. Every figu
 ### Spines and Axes
 
 - **Spines:** only bottom and left. Top and right spines must be removed (`sns.despine()` or `ax.spines["top"].set_visible(False)` etc.).
-- **Grid lines:** do NOT add grid lines unless the user explicitly requests them or the chart type strictly requires them (e.g., a Cleveland dot plot where alignment to a shared axis is the whole point). Default is no grid.
+- **Grid lines:** none unless the user explicitly requests them or the chart type strictly requires them (e.g., a Cleveland dot plot where alignment to a shared axis is the whole point). Default is no grid.
 - **Axis ticks:** use sparingly. Remove minor ticks. Reduce major tick count to the minimum needed for orientation. Use `MaxNLocator(nbins=...)` or explicit tick positions.
-- **Y-axis labels:** NEVER rotate. Labels must be horizontal — `rotation=0`, `ha="right"`, and `ma="left"` (multi-line alignment) are all required. `ma="left"` left-aligns wrapped lines so a multi-line label reads as a tidy block instead of a ragged right edge. If a label is too long, break it into multiple lines and align properly:
+- **Y-axis labels:** never rotated. Labels are horizontal — `rotation=0`, `ha="right"`, and `ma="left"` (multi-line alignment) are all required. `ma="left"` left-aligns wrapped lines so a multi-line label reads as a tidy block instead of a ragged right edge. If a label is too long, break it into multiple lines and align properly:
   ```python
   ax.set_ylabel("Share of\nmonthly posts", rotation=0, ha="right", ma="left", y=1, labelpad=...)
   # or for tick labels:
@@ -31,7 +31,7 @@ Create or revise publication-quality figures for the current project. Every figu
 
 - **Prefer direct labels on data elements** over a separate legend. Place the label text next to or on the element it describes.
 - **Label colour must match element colour.** If a bar is `#4477AA`, its label text must also be `#4477AA`.
-- A legend is acceptable ONLY when direct labelling would cause clutter (e.g., overlapping time series with >5 lines in a single panel). Even then, prefer annotating a few key series directly and using a minimal legend for the rest.
+- A legend is acceptable only when direct labelling would cause clutter (e.g., overlapping time series with >5 lines in a single panel). Even then, prefer annotating a few key series directly and using a minimal legend for the rest.
 - When a legend is unavoidable: `frameon=False`, outside the plot area, no border, no background fill.
 
 ### Bar Charts for Category Counts
@@ -50,7 +50,7 @@ Create or revise publication-quality figures for the current project. Every figu
 ### Information Layering (Doumont)
 
 Every figure must communicate at three levels:
-1. **Message (3-second read):** the figure title is a declarative sentence stating the finding. Example: "Forum activity drops 72% on Shabbat". NOT "Weekly activity patterns".
+1. **Message (3-second read):** the figure title is a declarative sentence stating the finding. Example: "Forum activity drops 72% on Shabbat", not "Weekly activity patterns".
 2. **Support:** the plot itself — the data that substantiates the title.
 3. **Detail:** annotations, reference lines, precise values for close reading.
 
@@ -94,15 +94,8 @@ Then after creating axes, always call `sns.despine(ax=ax)`.
 - Save to the project's figures directory as both `.png` (dpi=300) and `.svg`.
 - Use descriptive filenames: `shabbat_weekly_pattern.png`, not `fig1.png`.
 
-## Anti-Patterns (never do these)
+## Also avoid
 
-- Vertical bar charts for category comparisons
-- Rotated y-axis labels (always `rotation=0`, `ha="right"`, `ma="left"`)
-- Grid lines by default
-- Legends when direct labels would work
-- Labels in a different colour than the element they describe
-- Descriptive titles ("Bar chart of topic counts") instead of declarative findings
 - Dual-axis charts
 - 3D effects, drop shadows, gradient fills
-- Excessive tick marks
-- Right or top spines
+- Descriptive titles ("Bar chart of topic counts") instead of declarative findings

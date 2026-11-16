@@ -1,5 +1,6 @@
 ---
 description: Report development status by correlating git branches and worktrees with todo__<n>.md plan files
+effort: low
 ---
 
 # Project Status Report: Branches vs Todo Files
@@ -27,7 +28,7 @@ Analyze git branches/worktrees and todo files to report development status.
 
 4. **Analyze each matched pair** (todo file + branch)
    - **If `--quick` is set**: Only check merge status and list the pair, skip detailed analysis below
-   - **Analyze pairs in parallel using separate tool calls when multiple pairs exist**
+   - Analyze multiple pairs in parallel
    - Read todo file plan
    - Review branch commit history (`git log`)
    - Compare branch code, commit history vs todo plan steps

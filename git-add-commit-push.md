@@ -8,8 +8,8 @@ Stage changes, generate a commit message, commit, and push for the current proje
 
 ## Behavior
 1) Handle untracked files:
-   - If untracked files exist and `--all` is not set, ask to include them or ignore.
-   - If `--no-confirm` is set, default to adding untracked files.
+   - Untracked files are included by default.
+   - With `--confirm` (and without `--all`), ask whether to include or ignore them.
 
 2) Stage changes:
    - If including untracked: `git add -A`
@@ -20,7 +20,6 @@ Stage changes, generate a commit message, commit, and push for the current proje
    - If branch name contains a numbered issue pattern (e.g., `issue-123`, `fix/issue-42`, `123-fix-bug`), extract the issue number
    - **Auto-include** `Related to #<NUMBER>` in the commit message without asking the user
    - If `--closes` flag is set, use `Closes #<NUMBER>` instead of `Related to #<NUMBER>`
-   - Do NOT prompt the user about issue references — just include them silently
 
 4) Generate commit message:
    - If `--message` provided: use it exactly
@@ -32,13 +31,12 @@ Stage changes, generate a commit message, commit, and push for the current proje
    - Commit: `git commit -m "<message>"`
    - Push to upstream or set upstream if needed
 
-## Arguments (from {{ARGS}})
-- `--all`: Include untracked files
+## Arguments (from $ARGUMENTS)
+- `--all`: Include untracked files without asking, even with `--confirm`
 - `--message <msg>`: Use provided commit message
 - `--fast`: Generate a simple commit message (faster)
-- `--simple`: If total diff is shorter than 1000 characters, use that to generate a more detailed message
 - `--detailed`: Generate detailed conventional commit (slower)
-- `--confirm` and `--no-confirm`: whether to skip confirmation prompts (DEFAULT: --no-confirm)
+- `--confirm`: ask before including untracked files. Default: no confirmation prompts (`--no-confirm` is accepted and means the same as the default).
 - `--no-issue`: Skip checking branch name for issue references
 - `--closes`: Use `Closes #<NUMBER>` instead of `Related to #<NUMBER>` for issue references
 

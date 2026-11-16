@@ -38,7 +38,7 @@ Read as a reviewer: Does it make sense? Are steps achievable? Does approach addr
 - **Ready**: Summarize key changes (2-3 bullets), confirm no contradictions. With `--proceed`: auto-invoke `/plan-ok`. Without: state "Run `/plan-ok` to begin."
 - **Issues remain**: List by severity (Critical/Major/Minor) with location, description, suggested fix. Never invoke `/plan-ok` if issues remain.
 
-## Arguments (from {{ARGS}})
+## Arguments (from $ARGUMENTS)
 - `--file <path>`: Plan file path
 - `--issue <number|url>`: GitHub issue
 - `--proceed`: Auto-run `/plan-ok` when ready (default: false)

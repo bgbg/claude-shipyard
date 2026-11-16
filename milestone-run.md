@@ -4,12 +4,13 @@ description: Execute a GitHub milestone by planning and implementing its issues 
 
 # Milestone Run
 
-Execute a GitHub milestone end-to-end: plan, implement, review, merge, close — fully autonomous with parallel execution.
+Execute a GitHub milestone end-to-end: plan, implement, review, merge, close — autonomous between the confirmation points (execution plan, integration→main merge), with parallel execution.
 
 ## Phase 1: Load and Analyze
 
 1. **Fetch milestone** — Get the milestone's open issues and its execution-plan comment, pulling only the fields used: `gh issue list --milestone "<title>" --state open --json number,title,labels,body` (plus the comment). Do not dump raw full milestone `gh api` JSON into context. If no open issues remain, skip to Phase 3 (the milestone may still need its final integration→main merge).
 2. **Resolve integration branch and worktree**:
+   - `main` in this file means the repo default branch. Resolve it once: `gh repo view --json defaultBranchRef -q .defaultBranchRef.name`.
    - Parse the `Integration branch:` and `Integration worktree:` lines from the `## Execution Plan` comment posted by `/milestone-plan`.
    - If `Integration branch:` is found: verify the branch exists on `origin`. If missing locally, fetch it: `git fetch origin <branch>:<branch>`.
    - If `Integration branch:` is missing from the comment: derive expected name `milestone/<milestone-number>-<slug>` and check if it exists on `origin`. If yes, use it (and offer to update the milestone comment). If no, ask user — likely the milestone predates the integration-branch flow; offer to create it from `main` now.
@@ -17,7 +18,7 @@ Execute a GitHub milestone end-to-end: plan, implement, review, merge, close —
      - If a worktree exists at any path for this branch, reuse that path (it may differ from the canonical default if the user moved it).
      - If no worktree exists, create one: `git worktree add <path> <integration-branch>`. Fetch first if needed.
    - All milestone-level git operations (merges, pushes, the final integration→main PR creation) run inside this worktree via `git -C <worktree-path>`. The project's main directory is never checked out to the integration branch.
-   - Once resolved, **export `CC_BASE_BRANCH=<integration-branch>`** for all sub-command invocations in this run.
+   - Once resolved, pass `--base <integration-branch>` to every sub-command and name the integration branch in every sub-agent brief. Shell variables do not persist between commands or reach sub-agents, so do not rely on exporting `CC_BASE_BRANCH`.
 3. **Determine execution order**:
    - **Preferred**: Parse `### Wave N` structure from the same milestone comment.
    - **Fallback**: Derive from `Blocked by #N` / `Depends on #N` in issue bodies. Present derived order for user confirmation.
@@ -26,7 +27,7 @@ Execute a GitHub milestone end-to-end: plan, implement, review, merge, close —
 
 ## Phase 2: Execute
 
-5. **Process waves sequentially** — For each issue in the wave, spawn one sub-agent that runs the *entire* per-issue pipeline (steps 7–9: pre-start check, implement, review, merge) in its own context. Up to 3 such sub-agents run in parallel per wave. The orchestrator never inlines a per-issue `/plan-ok`, `/code-review`, review-polling, or fix cycle — all of it lives inside the sub-agent, so its file reads, edits, and review-comment dumps stay out of the orchestrator's context. Each sub-agent returns ONLY a compact summary; the orchestrator must not pull the sub-agent's transcript.
+5. **Process waves sequentially** — For each issue in the wave, spawn one sub-agent that runs the *entire* per-issue pipeline (steps 7–9: pre-start check, implement, review, merge) in its own context. Up to 3 such sub-agents run in parallel per wave. The orchestrator never inlines a per-issue `/plan-ok`, `/code-review`, review-polling, or fix cycle — all of it lives inside the sub-agent, so its file reads, edits, and review-comment dumps stay out of the orchestrator's context. Each sub-agent returns ONLY a compact summary; the orchestrator must not pull the sub-agent's transcript. Brief each sub-agent with: issue number, integration branch, integration worktree path, `DECISIONS.md` path, the summary schema below, and the escalation rule (it cannot ask the user, so it reports `blocked` or `needs-review`).
 
    Per-issue summary schema (the sub-agent's entire return value):
    ```
@@ -58,14 +59,14 @@ Execute a GitHub milestone end-to-end: plan, implement, review, merge, close —
    - Confirm the plan's `Base:` line matches the current integration branch. If it points to `main` or a stale branch, regenerate.
    - Re-read the issue from GitHub (`gh issue view`). Compare against the plan. If the issue was materially updated since the plan was created (new requirements, changed scope, new comments with decisions), regenerate the plan with `--base <integration-branch>`.
 
-8. **Implement** — Run `/plan-ok <number> --no-pr` (it reads the base from the plan; `CC_BASE_BRANCH` is also exported as a safety net). On external blockers: print `BLOCKED: Issue #<number> — <description>`, comment on issue, mark blocked, move on. On technical failure: retry once, then mark `failed`.
+8. **Implement** — Run `/plan-ok <number> --no-pr` (it reads the base from the plan's `Base:` line). On external blockers: print `BLOCKED: Issue #<number> — <description>`, comment on issue, mark blocked, move on. On technical failure: retry once, then mark `failed`.
 
 9. **Verify, Review, and Merge** (issue PR → integration branch, NOT main):
-   - **Spec-conformance gate**: `/git-pre-pr --base <integration-branch>` — its spec-conformance gate (step 3) verifies the build against the issue's acceptance criteria (tests + `/run` + spec critic), distinct from code review's "is this good code." If its verdict is `fail` or `incomplete`, fix and re-run (up to 2 cycles). Do not merge with unmet criteria; if still unmet after 2 cycles, set `status: needs-review`, record the failed criteria in `acceptance: unmet:[...]`, and stop without merging (do not block the wave).
+   - **Spec-conformance gate**: `/git-pre-pr --base <integration-branch>` — its spec-conformance gate (step 2) verifies the build against the issue's acceptance criteria (tests + `/run` + spec critic), distinct from code review's "is this good code." If its verdict is `fail` or `incomplete`, fix and re-run (up to 2 cycles). Do not merge with unmet criteria; if still unmet after 2 cycles, set `status: needs-review`, record the failed criteria in `acceptance: unmet:[...]`, and stop without merging (do not block the wave).
    - `/git-pr --base <integration-branch> --issues "<number>"` — it runs `/code-review high --fix` and commits the fixes, max 2 rounds. Do not run another review.
    - If critical or serious review problems remain after those 2 rounds, set `status: needs-review` in the summary (do not block the wave).
-   - `/git-pr-merge` → `/pr-merged` → verify issue closed
-   - `/git-pr-merge` automatically checks out the PR's base (the integration branch), so no `main` checkout happens here.
+   - `/git-pr-merge --no-fix` → verify issue closed
+   - `/git-pr-merge` updates the integration worktree in place (`git -C <integration-worktree-path> pull --ff-only`); nothing is checked out in the project's main directory.
    - **Return** the step-5 summary as the sub-agent's entire output — nothing else.
 
 10. **Post-close refresh** — After each issue is closed:
@@ -73,7 +74,7 @@ Execute a GitHub milestone end-to-end: plan, implement, review, merge, close —
     - If new issues found: incorporate them into the execution order and determine wave placement from dependencies. Plan generation for new issues follows the run's mode — lazy by default (their sub-agents generate plans at pre-start); only generate now if running upfront.
     - Re-validate that the remaining execution order still makes sense given completed work and any new issues.
 
-11. **Handle blocked issues** — When unblocked, resume from where left off. When only blocked issues remain, print summary and stay alive waiting for user.
+11. **Handle blocked issues** — When unblocked, resume from where left off. When only blocked issues remain, print the summary, alert the user with `/say`, and end; re-running `/milestone-run` resumes.
 
 ## Phase 3: Integration → Main
 
@@ -100,7 +101,7 @@ Run only when all milestone issues are closed.
 
 17. **Summary** — Print status (completed/blocked/failed/PRs, integration PR URL). Close milestone if all issues closed and integration merged, otherwise report what's left.
 
-## Arguments (from {{ARGS}})
+## Arguments (from $ARGUMENTS)
 - `<number>` or `--milestone <number|title>`: Milestone identifier
 - `--skip <issues>`: Comma-separated issue numbers to skip
 - `--start-from <wave>`: Resume from specific wave
@@ -118,5 +119,5 @@ Run only when all milestone issues are closed.
 - No emojis, no time estimates.
 - Issue PRs target the milestone integration branch, never `main`. The integration→main merge requires explicit user confirmation and happens only after all issues are closed.
 - `main`→integration auto-merge runs at every wave boundary. On conflict, halt the milestone — do not attempt automatic resolution.
-- `CC_BASE_BRANCH` must be exported for the entire run so sub-commands inherit the integration branch as their base.
+- Every sub-command gets `--base <integration-branch>` explicitly; the plan's `Base:` line carries it into `/plan-ok`.
 - The integration branch lives in a dedicated worktree (`.trees/milestone-<n>-<slug>` by default). All milestone-level git operations use `git -C <integration-worktree-path>`. The project's main directory is never checked out to the integration branch and must be left untouched by milestone-run.

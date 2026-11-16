@@ -14,7 +14,7 @@ Create a well-formed GitHub Pull Request for the current project, ensuring the b
      - If no upstream: suggest `git push -u origin <branch>` and retry after user action.
      - If working tree is dirty or hooks fail: show exact git error and stop without masking it.
 
-2) If asked to detect existing PR (best-effort) (default: disabled)
+2) Detect an existing PR (best-effort)
    - Query `gh pr view --json number,state,url,headRefName,baseRefName,isDraft` for the branch.
    - If an open PR exists and is not draft, print URL and exit.
    - If an open PR exists and is draft, note it for later processing and continue to step 3.
@@ -22,7 +22,7 @@ Create a well-formed GitHub Pull Request for the current project, ensuring the b
 
 3) Title and body generation
    - Generate title:
-     - Use last commit subject from `git log -1 --pretty=%s`
+     - Use the plan title (`todo__<issue-number>.md`) or the issue title. Without either, summarize the commits in `<base>..HEAD` in one line.
      - If branch name matches pattern `feature/123-foo` or `fix/456-bar`, extract issue number for later use
    - Generate body:
      - Concatenate all commit messages between `<base>..HEAD` using `git log --pretty=%B`
@@ -33,12 +33,12 @@ Create a well-formed GitHub Pull Request for the current project, ensuring the b
        - If no issue number can be determined, ask once whether to proceed without an issue link; abort if declined.
 
 4) Create PR (bias for action)
-   - Resolve base branch in this priority: explicit `--base <branch>` argument → `CC_BASE_BRANCH` environment variable → default `main`.
+   - Resolve base branch in this priority: explicit `--base <branch>` argument → `CC_BASE_BRANCH` environment variable → repo default branch.
    - Execute `gh pr create` with generated `--title`, `--body`, `--base <resolved-base>`. Set `--head` for forks if needed.
    - On failure, surface the exact `gh` error; suggest likely next steps (e.g., set upstream, authenticate, fix insufficient scopes) and stop.
    - Print resulting PR URL.
 
-5) Post-create actions — **run ALL applicable commands in parallel using separate Bash tool calls in a single message:**
+5) Post-create actions — run the applicable commands in parallel:
    - If an existing draft PR was detected in step 2: `gh pr ready <pr-number>`
    - Remove `planning` label from linked issue(s): `gh issue edit <issue-number> --remove-label "planning"`
    - If `--comment` flag provided: `gh issue comment <issue-number> --body "<summary with PR link>"`
@@ -63,8 +63,8 @@ Create a well-formed GitHub Pull Request for the current project, ensuring the b
 - `git-pr --issues "123,456"` → create PR closing issues #123 and #456.
 - `git-pr --comment` → create PR and post summary comment to linked issue(s).
 
-## Arguments (from {{ARGS}})
+## Arguments (from $ARGUMENTS)
 - `--issues "123,456"`: Explicitly specify issue numbers to close (adds `Closes #<number>` footers to PR body). If not provided, infers from branch name pattern (e.g., `feature/123-add-auth` → issue #123).
-- `--base "<branch>"`: Target branch to merge into. Resolution order: this flag → `CC_BASE_BRANCH` env var → `main`.
+- `--base "<branch>"`: Target branch to merge into. Resolution order: this flag → `CC_BASE_BRANCH` env var → repo default branch.
 - `--comment`: Add a summary comment to linked issue(s) with PR details. (default: skip)
 - `--no-code-review`: Skip the code review after PR creation.

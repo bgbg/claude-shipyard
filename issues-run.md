@@ -6,7 +6,7 @@ description: Work on a list of GitHub issues end-to-end (plan, implement, review
 
 Execute multiple GitHub issues end-to-end: for each issue, run the full cycle — plan, implement, code review, merge — using a dedicated branch and worktree per issue. Issues run either inline in one shared context or each in its own isolated sub-agent; by default the command decides per issue after planning (see Phase 1.5). Reuses existing skills; this command is just the orchestrator.
 
-## Arguments (from {{ARGS}})
+## Arguments (from $ARGUMENTS)
 - `<issues>`: One or more issue numbers, space- or comma-separated (e.g., `727 782 783` or `727,782,783`). Required.
 - `--auto` (alias `--consider-isolated`): **default**. Decide per issue — after planning — whether to run it in its own isolated sub-agent or inline in the shared orchestrator context (see Phase 1.5).
 - `--shared`: force every issue to run inline in one shared context (no per-issue sub-agents). Good for batches of small, cheap, often-unrelated chores.
@@ -50,12 +50,12 @@ Skip under `--shared` (everything inline) or `--isolated` (everything isolated).
 8. For each issue, choose **isolated** (own sub-agent) or **shared** (inline):
    - **isolated** when the plan has many steps, touches many files, has a large blast radius, carries Open Questions, or the issue is labeled `feature`/`enhancement`/`refactor`/`epic`; also lean isolated when the overall batch is large (protect the orchestrator's context).
    - **shared** when the plan is tiny (1–2 steps, ~1 file) and the task is a chore/doc/typo/trivial fix.
-   - **Tie-break**: when unsure, choose **isolated** — context hygiene is the safer failure mode.
+   - **Tie-break**: when unsure, go by plan size: **shared** for a small plan, **isolated** otherwise. A sub-agent adds cost; use it when the issue's reads and edits would crowd the orchestrator's context.
 9. Print a decision table (Issue | mode | one-line rationale) and proceed. The user overrides by re-running with `--shared` or `--isolated`.
 
 ### Phase 2: Develop → Verify → PR → Review → Merge → Cleanup
 Run the per-issue cycle below for each issue. **How** it runs depends on the issue's mode from Phase 1.5:
-- **Isolated**: one sub-agent runs the entire cycle (steps 10–15) in its own context and returns ONLY the compact summary below; the orchestrator never pulls its transcript. Isolated issues run sequentially, or in parallel waves of ≤3 under `--parallel`, respecting dependency order.
+- **Isolated**: one sub-agent runs the entire cycle (steps 10–15) in its own context and returns ONLY the compact summary below; the orchestrator never pulls its transcript. Isolated issues run sequentially, or in parallel waves of ≤3 under `--parallel`, respecting dependency order. Brief each sub-agent with: issue number, base branch, worktree path, plan file path, the summary schema, and the escalation rule (it cannot ask the user, so it reports `blocked` or `needs-review`).
 - **Shared**: the orchestrator runs the cycle inline, one issue after another, in the shared context.
 
 Isolated-issue summary schema (the sub-agent's entire return value):
@@ -72,14 +72,14 @@ notes: <one line, optional>
 Per-issue cycle:
 
 10. **Implement**: `/plan-ok <issue> --no-pr` — runs from inside the worktree. The plan's `Base:` line drives the branch base.
-11. **Pre-PR check + spec-conformance gate**: `/git-pre-pr` (with `--base <base>` if non-default). Its spec-conformance gate (step 3) verifies the build against the plan's acceptance criteria (tests + `/run` + spec critic), distinct from code review's "is this good code." If the verdict is `fail` or `incomplete`, fix and re-run (up to 2 cycles). Do not open the PR or merge with unmet criteria; if still unmet after 2 cycles, escalate via `/say`, mark the issue `open-needs-review`, and move on (do not halt the run).
+11. **Pre-PR check + spec-conformance gate**: `/git-pre-pr` (with `--base <base>` if non-default). Its spec-conformance gate (step 2) verifies the build against the plan's acceptance criteria (tests + `/run` + spec critic), distinct from code review's "is this good code." If the verdict is `fail` or `incomplete`, fix and re-run (up to 2 cycles). Do not open the PR or merge with unmet criteria; if still unmet after 2 cycles, escalate via `/say`, mark the issue `open-needs-review`, and move on (do not halt the run).
 12. **Open PR**: `/git-pr --issues "<issue>"` (with `--base <base>` if non-default)
 13. **Review**: `/git-pr` in step 12 runs `/code-review high --fix` and commits the fixes, max 2 rounds. Do not run another review.
 14. **Escalate**: if critical or serious review problems remain after those 2 rounds, escalate via `/say`.
-15. **Merge and cleanup**: only when the base is not the repo default branch, or `--merge` was given; never under `--no-merge`. `/git-pr-merge` → `/pr-merged`. Verify the issue is closed and the worktree is removed. Otherwise leave the PR open with status `open` and keep the worktree — the user merges with `/git-pr-merge`.
+15. **Merge and cleanup**: only when the base is not the repo default branch, or `--merge` was given; never under `--no-merge`. `/git-pr-merge --no-fix` (the review fixes already happened in step 13). Verify the issue is closed and the worktree is removed. Otherwise leave the PR open with status `open` and keep the worktree — the user merges with `/git-pr-merge`.
 
 ### Phase 3: Human intervention (applies throughout)
-- Whenever the run hits a blocker that needs the user (unanswered plan questions, failing tests after retries, unresolved review feedback, merge conflicts, auth failures), call `/say` with a short message naming the issue and the blocker, then wait for the user.
+- Whenever the run hits a blocker that needs the user (unanswered plan questions, failing tests after retries, unresolved review feedback, merge conflicts, auth failures), call `/say` with a short message naming the issue and the blocker. Mark the issue and continue with the issues that do not depend on it. Wait for the user only when nothing else can proceed (plan questions in Phase 1 are the usual case).
 - Examples: `/say "Issue 727 needs your input on the plan"`, `/say "Issue 782 has merge conflicts"`.
 
 ### Phase 4: Summary
@@ -93,7 +93,7 @@ Per-issue cycle:
 - **Always use worktrees** (never modify the user's main checkout).
 - **Execution mode**: `--auto` (default) decides isolated-vs-shared per issue after planning; `--shared` forces all inline; `--isolated` forces all into sub-agents. `--shared` and `--isolated` are mutually exclusive (error if both given).
 - **Concurrency**: `--parallel` (max 3 at a time) applies only to isolated issues; it is ignored for issues running shared/inline.
-- **Isolation tie-break**: under `--auto`, when unsure, isolate.
+- **Isolation tie-break**: under `--auto`, when unsure, go by plan size (Phase 1.5).
 - **Max 2 fix-review cycles** per issue, then escalate via `/say`.
 - **Spec-conformance gate** runs inside `/git-pre-pr` (verifies the build against the issue's acceptance criteria: tests + `/run` + spec critic). Its verdict must be `pass` before opening the PR/merge; `fail`/`incomplete` → fix and re-run, max 2 cycles, then escalate via `/say` and mark `open-needs-review`. No merge with unmet criteria.
 - **No unattended merge into the default branch**: PRs into the repo default branch stay open for the user unless `--merge`. PRs into other bases merge automatically.

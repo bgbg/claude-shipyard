@@ -29,7 +29,7 @@ Take a design document (from `/brainstorm`, a markdown file, or free-form descri
 ### Phase 3: Create on GitHub
 
 6. **Create milestone**: `gh api repos/{owner}/{repo}/milestones -f title="<title>" -f description="<description>"`. Capture the milestone number for the next step.
-7. **Create integration branch and worktree** — All milestone PRs target this branch instead of `main`, so partial milestone work cannot land on `main` until the milestone closes. The branch must always live in a dedicated worktree so the project's main directory is never touched by milestone operations.
+7. **Create integration branch and worktree** — All milestone PRs target this branch instead of `main`, so partial milestone work cannot land on `main` until the milestone closes. The branch must always live in a dedicated worktree so the project's main directory is never touched by milestone operations. `main` here and below means the repo default branch (`gh repo view --json defaultBranchRef -q .defaultBranchRef.name`).
    - Derive slug from milestone title: lowercase, ASCII, hyphenate, strip non-alphanumerics, cap at 40 characters, trim trailing hyphens.
    - Branch name: `milestone/<milestone-number>-<slug>`.
    - Worktree path: `.trees/milestone-<milestone-number>-<slug>`.
@@ -57,7 +57,7 @@ Take a design document (from `/brainstorm`, a markdown file, or free-form descri
     - **Upfront** — Generate a plan for each issue, but **delegate each `/make-plan --from-issue <number> --tree --base <integration-branch>` to its own sub-agent** so the codebase reads land in the sub-agent's context, not this planning session's. Each sub-agent returns only the created `todo__<issue-number>.md` filename and a one-line summary. The `--base` flag is critical: each issue's worktree must fork from the integration branch, not `main`, and `Base: <integration-branch>` is recorded in each plan's Branch Strategy section. Print the list of generated files so the user can review them.
 11. **Output** — Print milestone URL, integration branch name and URL, integration worktree path, issue URLs, execution order, the plan-generation mode (upfront/lazy), and the todo file list (or "deferred to `/milestone-run`" if lazy). Ask if user wants to run `/milestone-run`.
 
-## Arguments (from {{ARGS}})
+## Arguments (from $ARGUMENTS)
 - `--file <path>`: Path to design/brainstorm markdown file
 - `<text>`: Free-form design description
 - No arguments: auto-detect from brainstorm session or ask user

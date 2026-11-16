@@ -15,6 +15,7 @@ Start implementing the plan, adhering to it and the user's instructions.
 - No arguments: ask user
 
 ### 2) Fetch plan content
+- `todo__<N>.md` files live in the root of the main checkout (the first entry of `git worktree list`), not in the issue's worktree.
 - **File (preferred)**: Read locally. Extract issue number from `todo__<N>.md` filename. Do NOT fetch from GitHub.
 - **Issue**: Use local `todo__<issue-number>.md` if exists. Otherwise fetch from issue comments (newest-first, look for plan sections). Abort if no plan found.
 
@@ -36,16 +37,17 @@ Use the resolved base branch from step 3.
 **No worktree**: Checkout the resolved base, fast-forward, then create the new branch off it. If the branch already exists, just check it out.
 
 ### 6) Work
-- Implement step by step. Test as you go, fix errors immediately.
-- Periodically commit and push (after completing steps or significant milestones).
-- Ask user if tasks require their intervention.
+- Implement the plan. Test as you go and fix errors as they appear.
+- Commit and push after completing steps or significant milestones.
+- Done when every item in the plan's Acceptance Criteria passes its named verification. Run each one before finishing.
+- Work through ordinary errors (failing tests, timeouts, tool errors). Stop for the user only when a step needs something only they can supply, such as credentials or a product decision the plan leaves open.
 
 ### 7) Review step
 - Skip this step if `--no-pr` is set.
 - `/git-pre-pr --base <resolved-base>` → `/git-pr --base <resolved-base>` (omit `--base` if it equals the repo default). Pass `--no-code-review` through to `/git-pr` if set.
 - `/git-pr` runs the code review and applies the fixes. Do not run another review here.
 
-## Arguments (from {{ARGS}})
+## Arguments (from $ARGUMENTS)
 - `--file <path>`: Plan file path
 - `--issue <number|url>`: GitHub issue
 - `<argument>`: Positional with smart detection (numeric/URL/path)

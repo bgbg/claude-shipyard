@@ -13,7 +13,7 @@ Thanks for considering a contribution. These commands exist because they get use
   ```
   The `description` is what Claude reads to route a request. Be specific — include trigger words ("when the user asks…").
 - **Reuse, don't reinvent.** If your new command needs to commit + push, call `/git-add-commit-push`, don't re-implement it. The same goes for `/git-pr`, `/git-pre-pr`, etc.
-- **Document the arguments.** Use the `## Arguments (from {{ARGS}})` section. List every flag with a short description and a default.
+- **Document the arguments.** Use the `## Arguments (from $ARGUMENTS)` section. List every flag with a short description and a default.
 - **No personal references.** No hardcoded paths, emails, usernames, or project-specific assumptions. Use `<owner>/<repo>` style placeholders.
 - **No emojis** in command prompts unless the user explicitly asks for them at runtime.
 - **No `Signed-off-by` or AI-attribution trailers** in any auto-generated commit or PR body.

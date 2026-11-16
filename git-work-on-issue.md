@@ -4,14 +4,14 @@ description: Prepare working environment for a GitHub issue
 
 # Git Work on Issue
 
-Prepare working on a GitHub issue by creating a properly named branch and annotating the issue for the current project. This command ONLY prepares the ground - it does not plan or edit code.
+Prepare working on a GitHub issue by creating a properly named branch and annotating the issue for the current project. This command prepares the ground and then hands off to `/make-plan` (step 9). It does not edit code itself.
 
 ## Behavior
 1) Fetch issue
    - Accept `--issue <number|url>` or positional `<issue>` as the first non-flag argument. If neither is provided, ask for the issue number.
-   - Fetch issue and repo metadata in one call: `gh issue view <issue> --json number,title,state,labels,repository`.
+   - Fetch issue and repo metadata in parallel: `gh issue view <issue> --json number,title,state,labels` and `gh repo view --json nameWithOwner,defaultBranchRef`.
    - Do not check for GitHub authentication beforehand. If authentication fails, handle the error and attempt to authenticate.
-   - Extract repository info from `repository.nameWithOwner` and `repository.defaultBranchRef.name`.
+   - Extract repository info from `nameWithOwner` and `defaultBranchRef.name`.
    - Verify the issue is open. Abort if closed.
 
 2) Determine base branch
@@ -41,13 +41,13 @@ Prepare working on a GitHub issue by creating a properly named branch and annota
    - Otherwise: `git checkout <base>` then `git pull --ff-only`, then `git checkout -b <derived-branch>`.
 
 6) Push and annotate
-   - **Run all three commands in parallel using separate Bash tool calls in a single message:**
+   - Run these three commands in parallel:
      - `git push -u origin <derived-branch>`
      - `gh issue edit <issue> --add-label "work-in-progress"`
      - `gh issue comment <issue> --body "Starting work on this in branch [<derived-branch>](https://github.com/<owner>/<repo>/tree/<derived-branch>)."`
 
 7) Locate plan
-   - **Skip this step entirely if `--plan` is true (default)** — `/make-plan` in step 9 will find or create the plan, making this step redundant.
+   - **Skip this step unless `--no-plan` is set** — `/make-plan` in step 9 finds or creates the plan.
    - **Only if `--no-plan` is set**, locate existing plan:
      - **GitHub comments have precedence**: Fetch issue comments: `gh issue view <issue> --json comments`.
      - Search comments (from newest to oldest) for plan content. A plan comment typically contains markdown sections like "## Title", "## Assumptions", "## Open Questions", "## Steps", etc.
@@ -60,12 +60,12 @@ Prepare working on a GitHub issue by creating a properly named branch and annota
    - Print the branch name, base, and the clickable URL: `https://github.com/<owner>/<repo>/tree/<branch>`.
    - If `--tree`: Print the worktree location: `.trees/<issue-number>-<type>-<kebab-description>`.
    - If plan was found, indicate the plan source (GitHub comment or todo file).
-   - Do not plan or edit code in this command. Step 9 hands off to `/make-plan` (and to `/plan-ok` with `--skip-plan`).
+   - Do not edit code in this command. Step 9 hands off to `/make-plan` (and to `/plan-ok` with `--skip-plan`).
 
-9) If --plan is set (Default: true) call /make-plan --from-issue <issue number> --branch <derived-branch> <either --tree or --no-tree> [--base <resolved-base> if non-default]
+9) Unless `--no-plan` is set, call /make-plan --from-issue <issue number> --branch <derived-branch> <either --tree or --no-tree> [--base <resolved-base> if non-default]
    - With `--skip-plan`: add `--short` to the `/make-plan` call, then run `/plan-ok <issue number>` without waiting for approval. Exception: if the short plan has an Open Question with two or more options, stop and present it.
 
-## Arguments (from {{ARGS}})
+## Arguments (from $ARGUMENTS)
 - `--issue <number|url>`: Target issue identifier (flag form).
 - `<issue>`: Positional target issue identifier (number or GitHub issue URL).
 - `--tree`: Create branch in git worktree at `.trees/<issue-number>-<type>-<kebab-description>`.

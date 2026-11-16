@@ -1,5 +1,6 @@
 ---
 description: Generate clear GitHub issue title and description, then create it
+effort: low
 ---
 
 # Git Make Issue
@@ -21,7 +22,7 @@ Generate a clear GitHub issue title and description, confirm, then create it.
    - Create the issue via `gh issue create` with title and body.
    - If labels were proposed (and not removed during confirm), pass them to `gh issue create` as `--label` values.
 
-## Arguments (from {{ARGS}})
+## Arguments (from $ARGUMENTS)
 - `--repo <owner/repo>`: Target repository (defaults to current repo).
 - `--body <text>`: Use provided text as source material.
 - `--no-confirm`: Skip confirmation prompt and create immediately.

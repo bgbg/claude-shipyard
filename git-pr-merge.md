@@ -12,7 +12,7 @@ Assume we are authenticated with GitHub. Run the commands without checking and d
 
 1) Note current branch name (for cleanup steps)
    - Run `git branch --show-current` to capture the current branch name.
-   - Use this name in later cleanup steps (branch deletion, worktree removal). Validate that the user is on the correct branch.
+   - Use this name in later cleanup steps (branch deletion, worktree removal). Abort if it is the repo default branch.
 
 2) Fix outstanding review comments (on by default)
    - If the conversation context contains code review comments (e.g., from `/code-review` or `/gh-code-review`), fix all of them before merging.
@@ -36,10 +36,11 @@ Assume we are authenticated with GitHub. Run the commands without checking and d
      - Delete local merged branch: `git branch -d <branch-name>`
      - Delete remote merged branch: `git push origin --delete <branch-name>`
    - Remove todo file if was present (non-blocking).
+   - Remove the `work-in-progress` label from the linked issue: `gh issue edit <issue-number> --remove-label "work-in-progress"` (non-blocking).
    - Close open PR review comment threads: Use `gh api` to resolve any open review comment conversations on the merged PR (non-blocking; continue if none found).
    - If it is clear what github issue this PR was for (e.g., from branch name or PR title), verify it was closed by the merge. If not, notify the user.
 
-## Arguments (from {{ARGS}})
+## Arguments (from $ARGUMENTS)
 - `--no-fix`: Skip fixing review comments before merging.
 - `--no-cleanup`: Skip branch deletion (both local and remote).
 - `--force-delete`: Force delete local branch even if not fully merged (use `-D` instead of `-d`).

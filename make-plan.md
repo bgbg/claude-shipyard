@@ -4,24 +4,24 @@ description: Generate implementation plan from GitHub issue or general task
 
 # Plan work on a task
 
-Create a concise, implementation-ready plan. DON'T change any existing code.
+Create a concise, implementation-ready plan. Do not change any existing code.
 
 ## Branch Strategy Detection
 Before generating, determine branch strategy:
-- Branch name: user-specified `--branch <name>`, or auto-generate as `[feat|develop|fix|chore]/<issue_number>-short-description`
+- Branch name: user-specified `--branch <name>`, or auto-generate as `[fix|develop|feature]/<issue-number>-<kebab-description>` (the same pattern as `/git-work-on-issue`)
 - Worktree: default ON unless `--no-tree` specified
 - Base branch: resolve in priority order: explicit `--base <branch>` argument → `CC_BASE_BRANCH` environment variable → repo default branch (typically `main`). Always record the resolved base in the plan.
 - If branch/worktree preference is clear: include "Branch Strategy" section in plan
 - If unclear: omit section, add Open Question Q0 asking about it with options and implications
 
 ## Issue Mode (`--from-issue <number|url>` or positional number)
-1. **Fetch in parallel**: issue data (`gh issue view <issue> --json number,title,state,body,comments,repository`) and add "planning" label (non-blocking)
+1. **Fetch in parallel**: issue data (`gh issue view <issue> --json number,title,state,body,comments`) and add "planning" label (non-blocking)
 2. Verify issue is open. Abort if closed.
 3. **Check for existing plan** (from fetched comments, newest-first):
    - **Found**: Copy to `todo__<issue-number>.md`, append any comments on open questions. Do not regenerate. Exit.
    - **Not found**: Check for existing `todo__<issue-number>.md`. If exists, ask user whether to regenerate or keep.
 4. Only if no existing plan: analyze issue content and generate plan
-5. **Write** `todo__<issue-number>.md` (absolute path, in `pwd` — NOT in worktree)
+5. **Write** `todo__<issue-number>.md` (absolute path, in the root of the main checkout (the first entry of `git worktree list`), not in the issue's worktree)
 
 ## General Mode
 1. First argument = output file path
@@ -48,7 +48,7 @@ Required sections:
 
 Optional (add only if they reduce ambiguity): Scope/Non-Goals, Requirements/Constraints, Risks/Mitigations, Dependencies, Deliverables, Rollout/Backout.
 
-## Arguments (from {{ARGS}})
+## Arguments (from $ARGUMENTS)
 - `<output-file>`: Output path (general mode)
 - `--from-issue <number|url>` or `<number>`: GitHub issue
 - `--tree` / `--no-tree`: Worktree preference (default: tree)
@@ -59,5 +59,5 @@ Optional (add only if they reduce ambiguity): Scope/Non-Goals, Requirements/Cons
 ## Style
 - Expert audience, crisp, skimmable. Bullets over paragraphs. Backticks for code.
 - Numbered flat lists over nested bullets. No time estimates or emojis.
-- LLM-optimized: deterministic, explicit, no pronouns. Consistent terminology.
+- Written for the user who reviews the plan and the agent that implements it: explicit, self-contained steps, consistent terminology.
 - Sub-issues: basic markdown only for `gh issue create` compatibility.

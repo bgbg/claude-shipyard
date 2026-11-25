@@ -64,6 +64,7 @@ Prepare working on a GitHub issue by creating a properly named branch and annota
 
 9) Unless `--no-plan` is set, call /make-plan --from-issue <issue number> --branch <derived-branch> <either --tree or --no-tree> [--base <resolved-base> if non-default]
    - With `--skip-plan`: add `--short` to the `/make-plan` call, then run `/plan-ok <issue number>` without waiting for approval. Exception: if the short plan has an Open Question with two or more options, stop and present it.
+   - With `--auto`: run the full `/make-plan` (no `--short`). If its Open Questions section says "No questions", run `/plan-ok <issue number>` without waiting for approval; otherwise stop and present the questions.
 
 ## Arguments (from $ARGUMENTS)
 - `--issue <number|url>`: Target issue identifier (flag form).
@@ -71,6 +72,7 @@ Prepare working on a GitHub issue by creating a properly named branch and annota
 - `--tree`: Create branch in git worktree at `.trees/<issue-number>-<type>-<kebab-description>`.
 - `--base <branch>`: Base branch to fork from. Resolution order: this flag → `CC_BASE_BRANCH` env var → repo default branch.
 - `--skip-plan`: For trivial issues. Writes a short plan (branch strategy and acceptance criteria) and starts `/plan-ok` without waiting for plan approval.
+- `--auto`: Full plan; start `/plan-ok` without waiting for approval when the plan has no open questions.
 - `--no-plan`: Do not call `/make-plan`. Only report an existing plan (step 7) and stop.
 
 ## Heuristics

@@ -19,7 +19,7 @@ Analyze git branches/worktrees and todo files to report development status.
    - Treat worktrees as regular branches for reporting
 
 2. **Discover todo files**
-   - Find all `todo__*.md` files in project root
+   - Find all `todo__*.md` files in the root of the main checkout (the first entry of `git worktree list`)
    - Extract issue numbers from filenames (pattern: `todo__<number>.md`)
 
 3. **Correlate branches with todo files**

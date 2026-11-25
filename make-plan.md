@@ -51,7 +51,7 @@ Optional (add only if they reduce ambiguity): Scope/Non-Goals, Requirements/Cons
 ## Arguments (from $ARGUMENTS)
 - `<output-file>`: Output path (general mode)
 - `--from-issue <number|url>` or `<number>`: GitHub issue
-- `--tree` / `--no-tree`: Worktree preference (default: tree)
+- `--no-tree`: Record `Worktree: no` (default: `Worktree: yes`)
 - `--branch <name>`: Custom branch name
 - `--short`: Short plan for trivial issues (see Short Mode)
 - `--base <branch>`: Base branch to fork from. Resolution order: this flag → `CC_BASE_BRANCH` env var → repo default branch.

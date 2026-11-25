@@ -18,11 +18,11 @@ Prepare working on a GitHub issue by creating a properly named branch and annota
    - Resolve in this priority: explicit `--base <branch>` argument → `CC_BASE_BRANCH` environment variable → repository default branch (typically `main`).
    - Fetch only the base branch: `git fetch origin <base-branch>:<base-branch>`.
    - Fast-forward the base branch to match remote.
-   - **Note**: When using `--tree`, work off `origin/<resolved-base>` and ignore current branch state and uncommitted changes.
+   - **Note**: With a worktree (the default), work off `origin/<resolved-base>` and ignore current branch state and uncommitted changes.
 
 3) Ensure clean working tree
-   - If creating a regular branch (not `--tree`): abort if there are uncommitted changes.
-   - If using `--tree`: ignore uncommitted changes in current working tree (worktree is independent).
+   - Worktree (default): ignore uncommitted changes in the current working tree (the worktree is independent).
+   - With `--no-tree`: abort if there are uncommitted changes.
 
 4) Derive branch name
    - Pattern: `[fix|develop|feature]/<issue-number>-<kebab-description>`.
@@ -33,12 +33,12 @@ Prepare working on a GitHub issue by creating a properly named branch and annota
    - `description` derives from the issue title or manual prompt. Sanitize to kebab-case, ASCII, max length 48.
 
 5) Create and switch branch
-   - If `--tree`:
-     - Create git worktree in `.trees/<issue-number>-<type>-<kebab-description>` and work there.
+   - Worktree (default):
+     - Create git worktree in `.trees/<branch-slug>` and work there. `<branch-slug>` is the branch name with `/` replaced by `-` (`fix/42-login-error` → `.trees/fix-42-login-error`). `/plan-ok` reuses this worktree.
      - Copy environment files to the new worktree: `.env`, `.env.local`, `.env.*` (if they exist in the main working directory).
      - Log which files were copied (or note if none exist).
      - Exclude the whole `.trees` directory from Time Machine (macOS only, idempotent, no sudo): `command -v tmutil >/dev/null && tmutil addexclusion "$(git rev-parse --show-toplevel)/.trees"`. Excluding the parent covers every worktree under it, including ones created earlier. Committed work stays backed up in the main repo's `.git`.
-   - Otherwise: `git checkout <base>` then `git pull --ff-only`, then `git checkout -b <derived-branch>`.
+   - With `--no-tree`: `git checkout <base>` then `git pull --ff-only`, then `git checkout -b <derived-branch>`.
 
 6) Push and annotate
    - Run these three commands in parallel:
@@ -52,27 +52,28 @@ Prepare working on a GitHub issue by creating a properly named branch and annota
      - **GitHub comments have precedence**: Fetch issue comments: `gh issue view <issue> --json comments`.
      - Search comments (from newest to oldest) for plan content. A plan comment typically contains markdown sections like "## Title", "## Assumptions", "## Open Questions", "## Steps", etc.
      - If a plan is found in comments, use it as the source of truth.
-     - **Fallback to todo file**: If no plan found in comments, check for `todo__<issue-number>.md` file in the current directory using Read tool.
+     - **Fallback to todo file**: If no plan found in comments, check for `todo__<issue-number>.md` file in the root of the main checkout (the first entry of `git worktree list`) using Read tool.
      - If plan found in either location, inform user of the plan source (GitHub comment or todo file).
      - If no plan found in either location, inform user that no plan exists yet.
 
 8) Output
    - Print the branch name, base, and the clickable URL: `https://github.com/<owner>/<repo>/tree/<branch>`.
-   - If `--tree`: Print the worktree location: `.trees/<issue-number>-<type>-<kebab-description>`.
+   - Unless `--no-tree`: Print the worktree location: `.trees/<branch-slug>`.
    - If plan was found, indicate the plan source (GitHub comment or todo file).
-   - Do not edit code in this command. Step 9 hands off to `/make-plan` (and to `/plan-ok` with `--skip-plan`).
+   - Do not edit code in this command. Step 9 hands off to `/make-plan` (and to `/plan-ok` with `--skip-plan` or `--auto`).
 
-9) Unless `--no-plan` is set, call /make-plan --from-issue <issue number> --branch <derived-branch> <either --tree or --no-tree> [--base <resolved-base> if non-default]
+9) Unless `--no-plan` is set, call /make-plan --from-issue <issue number> --branch <derived-branch> <--no-tree only if `--no-tree` was given> [--base <resolved-base> if non-default]
    - With `--skip-plan`: add `--short` to the `/make-plan` call, then run `/plan-ok <issue number>` without waiting for approval. Exception: if the short plan has an Open Question with two or more options, stop and present it.
+   - Default (no `--skip-plan`, no `--auto`): run the full `/make-plan` and stop; the user approves the plan and runs `/plan-ok`.
    - With `--auto`: run the full `/make-plan` (no `--short`). If its Open Questions section says "No questions", run `/plan-ok <issue number>` without waiting for approval; otherwise stop and present the questions.
 
 ## Arguments (from $ARGUMENTS)
 - `--issue <number|url>`: Target issue identifier (flag form).
 - `<issue>`: Positional target issue identifier (number or GitHub issue URL).
-- `--tree`: Create branch in git worktree at `.trees/<issue-number>-<type>-<kebab-description>`.
+- `--no-tree`: Create a regular branch in the current checkout instead of a worktree. Default: worktree at `.trees/<branch-slug>`.
 - `--base <branch>`: Base branch to fork from. Resolution order: this flag → `CC_BASE_BRANCH` env var → repo default branch.
 - `--skip-plan`: For trivial issues. Writes a short plan (branch strategy and acceptance criteria) and starts `/plan-ok` without waiting for plan approval.
-- `--auto`: Full plan; start `/plan-ok` without waiting for approval when the plan has no open questions.
+- `--auto`: Off by default. Full plan; start `/plan-ok` without waiting for approval when the plan has no open questions.
 - `--no-plan`: Do not call `/make-plan`. Only report an existing plan (step 7) and stop.
 
 ## Heuristics
@@ -81,6 +82,6 @@ Prepare working on a GitHub issue by creating a properly named branch and annota
 - If the derived branch already exists locally or remotely, append a short timestamp suffix `-yyyymmddHHMM`.
 
 ## Examples
-- `/git-work-on-issue 42` → reads issue, creates `fix/42-login-error` (if labeled `bug`), pushes, and comments with branch link.
-- `/git-work-on-issue --issue 42 --tree` → same as above but creates worktree in `.trees/42-fix-login-error`.
+- `/git-work-on-issue 42` → reads issue, creates `fix/42-login-error` (if labeled `bug`), pushes, comments with branch link, and creates worktree in `.trees/fix-42-login-error`.
+- `/git-work-on-issue --issue 42 --no-tree` → same as above but creates the branch in the current checkout (aborts on uncommitted changes).
 - `/git-work-on-issue https://github.com/<owner>/<repo>/issues/42` → same as first example.

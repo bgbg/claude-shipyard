@@ -32,9 +32,9 @@ Start implementing the plan, adhering to it and the user's instructions.
 ### 5) Setup branch and worktree
 Use the resolved base branch from step 3.
 
-**Worktree (default)**: Check `git worktree list`. If exists for branch, switch to it. Otherwise create at `.trees/<branch-name>`, forked from the resolved base: `git worktree add <path> -b <branch-name> origin/<base>`. Fetch the base first if needed: `git fetch origin <base>`.
+**Worktree (`Worktree: yes`, or no `Worktree:` line)**: Check `git worktree list`. If exists for branch (`/git-work-on-issue` normally created it), switch to it. Otherwise create at `.trees/<branch-slug>` (the branch name with `/` replaced by `-`), forked from the resolved base: `git worktree add <path> -b <branch-name> origin/<base>`. Fetch the base first if needed: `git fetch origin <base>`. After creating it, set it up as `/git-work-on-issue` step 5 does: copy `.env`, `.env.local` and `.env.*` from the main checkout if they exist (log which), and exclude `.trees` from Time Machine (`command -v tmutil >/dev/null && tmutil addexclusion "$(git rev-parse --show-toplevel)/.trees"`, run from the main checkout).
 
-**No worktree**: Checkout the resolved base, fast-forward, then create the new branch off it. If the branch already exists, just check it out.
+**No worktree (`Worktree: no`)**: Checkout the resolved base, fast-forward, then create the new branch off it. If the branch already exists, just check it out.
 
 ### 6) Work
 - Implement the plan. Test as you go and fix errors as they appear.

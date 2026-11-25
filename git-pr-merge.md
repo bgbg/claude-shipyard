@@ -10,9 +10,10 @@ Assume we are authenticated with GitHub. Run the commands without checking and d
 
 ## Behavior
 
-1) Note current branch name (for cleanup steps)
-   - Run `git branch --show-current` to capture the current branch name.
-   - Use this name in later cleanup steps (branch deletion, worktree removal). Abort if it is the repo default branch.
+1) Determine the branch to merge, `<branch-name>` (for PR lookup and cleanup steps)
+   - If the conversation context makes the branch unambiguous (e.g., a PR was just created or a worktree was used in this session, or branch name is explicitly mentioned), use that branch, even if the current directory has a different branch checked out.
+   - Otherwise run `git branch --show-current`.
+   - Use this name in later steps (PR lookup, branch deletion, worktree removal). Abort if it is the repo default branch.
 
 2) Fix outstanding review comments (on by default)
    - If the conversation context contains code review comments (e.g., from `/code-review` or `/gh-code-review`), fix all of them before merging.
@@ -20,7 +21,7 @@ Assume we are authenticated with GitHub. Run the commands without checking and d
    - Skip this step if `--no-fix` is passed.
 
 3) Find and merge PR
-   - Query `gh pr list --head <current-branch> --json number,state,baseRefName` for the current branch.
+   - Query `gh pr list --head <branch-name> --json number,state,baseRefName` for the branch from step 1.
    - If no PR exists, abort with error message.
    - Capture `baseRefName` — this is the branch the PR merged into (may be `main`, `master`, or a milestone integration branch like `milestone/7-foo`).
    - Execute `gh pr merge <pr-number> --merge` to merge the PR.
@@ -31,7 +32,7 @@ Assume we are authenticated with GitHub. Run the commands without checking and d
      - Run `git worktree list --porcelain` and look for a worktree whose `branch` is `refs/heads/<baseRefName>`.
      - **If a worktree exists for `<baseRefName>` other than the current one** (e.g. milestone integration worktree): update it in place — `git -C <other-worktree-path> pull --ff-only`. Do NOT attempt `git checkout <baseRefName>` from the current location; that would fail because the branch is checked out elsewhere.
      - **If no other worktree has `<baseRefName>` checked out**: run `git checkout <baseRefName>` followed by `git pull --ff-only` from the current location (legacy behavior for non-milestone PRs targeting `main`).
-   - Remove worktrees using the merged feature branch: Run `git worktree list` and parse output to find worktrees on `<branch-name>` (the current branch from step 1, not the base), then `git worktree remove <worktree-path>` for each (non-blocking; continue if fails or no worktrees found).
+   - Remove worktrees using the merged feature branch: Run `git worktree list` and parse output to find worktrees on `<branch-name>` (the branch from step 1, not the base), then `git worktree remove <worktree-path>` for each (non-blocking; continue if fails or no worktrees found).
    - Delete branches (run in parallel):
      - Delete local merged branch: `git branch -d <branch-name>`
      - Delete remote merged branch: `git push origin --delete <branch-name>`

@@ -57,7 +57,7 @@ Restart Claude Code and the commands appear as `/git-pre-pr`, `/issues-run`, etc
 ## Design notes
 
 - **Commands compose.** Big commands like `/issues-run` and `/milestone-run` are thin orchestrators — they delegate to the smaller commands. If you fix a bug in `/git-pre-pr`, every workflow benefits.
-- **Worktrees by default.** Long-running work happens in `.trees/<branch>` so the user's main checkout is never disturbed.
+- **Worktrees by default.** Long-running work happens in `.trees/<branch-slug>` (the branch name with `/` replaced by `-`) so the user's main checkout is never disturbed.
 - **`CC_BASE_BRANCH` env var** flows through the chain so milestone integration branches (or any non-`main` base) are honored end-to-end.
 - **Humans in the loop.** Commands `/say` when they need attention, and Open Questions in plans are surfaced explicitly rather than guessed. Nothing merges into the default branch unattended.
 - **Hard rules live in hooks, not prose.** "Never force-push" and "never `--no-verify`" used to be sentences in these files; they are now a `PreToolUse` hook on `Bash` in the author's settings, because a hook holds in every permission mode and a sentence does not. Prompt text here is guidance.

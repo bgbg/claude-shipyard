@@ -39,9 +39,9 @@ Execute multiple GitHub issues end-to-end: for each issue, run the full cycle �
 Plans require the most user intervention (open questions, scope clarifications), so always do this serially first — get all the human-in-the-loop work out of the way before any long-running implementation starts.
 
 6. For each issue **in order**:
-   - Run `/git-work-on-issue <issue> --tree --base <base>` — creates the branch, worktree, and (because `--plan` is the default) generates the plan via `/make-plan`.
+   - Run `/git-work-on-issue <issue> --base <base>` — creates the branch, worktree (its default), and the plan via `/make-plan`, then stops. Do not pass it `--auto` or `--skip-plan` (its `--auto` is unrelated to this command's `--auto`); Phase 2 runs `/plan-ok`.
    - If `/make-plan` raises Open Questions that need answers, resolve them with the user now. Use `/say` to alert the user if they have stepped away.
-   - Confirm `todo__<issue>.md` exists, its `Base:` line matches the resolved base, and it carries the issue's **Acceptance Criteria** (each with a verification method). If criteria are missing, regenerate the plan — the spec-conformance gate in Phase 2 needs them.
+   - Confirm `todo__<issue>.md` exists in the root of the main checkout, its `Base:` line matches the resolved base, and it carries the issue's **Acceptance Criteria** (each with a verification method). If criteria are missing, regenerate the plan — the spec-conformance gate in Phase 2 needs them.
 7. After all plans are ready, print a one-line summary per issue (branch, worktree path, plan file).
 
 ### Phase 1.5: Decide isolation per issue

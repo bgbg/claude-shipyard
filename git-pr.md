@@ -22,7 +22,7 @@ Create a well-formed GitHub Pull Request for the current project, ensuring the b
 
 3) Title and body generation
    - Generate title:
-     - Use the plan title (`todo__<issue-number>.md`) or the issue title. Without either, summarize the commits in `<base>..HEAD` in one line.
+     - Use the plan title (`todo__<issue-number>.md` in the root of the main checkout) or the issue title. Without either, summarize the commits in `<base>..HEAD` in one line.
      - If branch name matches pattern `feature/123-foo` or `fix/456-bar`, extract issue number for later use
    - Generate body:
      - Concatenate all commit messages between `<base>..HEAD` using `git log --pretty=%B`

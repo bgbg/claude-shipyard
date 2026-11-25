@@ -31,12 +31,13 @@ Assume we are authenticated with GitHub. Run the commands without checking and d
    - **Update the base branch locally** (the branch the PR was merged into, captured in step 3 as `<baseRefName>`). Do NOT hardcode `main`. The behavior depends on where `<baseRefName>` is currently checked out:
      - Run `git worktree list --porcelain` and look for a worktree whose `branch` is `refs/heads/<baseRefName>`.
      - **If a worktree exists for `<baseRefName>` other than the current one** (e.g. milestone integration worktree): update it in place — `git -C <other-worktree-path> pull --ff-only`. Do NOT attempt `git checkout <baseRefName>` from the current location; that would fail because the branch is checked out elsewhere.
-     - **If no other worktree has `<baseRefName>` checked out**: run `git checkout <baseRefName>` followed by `git pull --ff-only` from the current location (legacy behavior for non-milestone PRs targeting `main`).
-   - Remove worktrees using the merged feature branch: Run `git worktree list` and parse output to find worktrees on `<branch-name>` (the branch from step 1, not the base), then `git worktree remove <worktree-path>` for each (non-blocking; continue if fails or no worktrees found).
+     - **If no other worktree has `<baseRefName>` checked out and the current location is a linked worktree** (`git rev-parse --git-dir` differs from `git rev-parse --git-common-dir`): run `git fetch origin <baseRefName>:<baseRefName>`. Do NOT check out the base inside the issue's worktree; the worktree must stay on `<branch-name>` so the next step finds it.
+     - **If no other worktree has `<baseRefName>` checked out and the current location is the main checkout**: run `git checkout <baseRefName>` followed by `git pull --ff-only`.
+   - Remove worktrees using the merged feature branch: Run `git worktree list` and parse output to find worktrees on `<branch-name>` (the branch from step 1, not the base), then `git -C <main-checkout> worktree remove <worktree-path>` for each, where `<main-checkout>` is the first entry of `git worktree list` (a worktree cannot be removed from inside itself) (non-blocking; continue if fails or no worktrees found).
    - Delete branches (run in parallel):
      - Delete local merged branch: `git branch -d <branch-name>`
      - Delete remote merged branch: `git push origin --delete <branch-name>`
-   - Remove todo file if was present (non-blocking).
+   - Remove `todo__<issue-number>.md` from the root of the main checkout if present (non-blocking).
    - Remove the `work-in-progress` label from the linked issue: `gh issue edit <issue-number> --remove-label "work-in-progress"` (non-blocking).
    - Close open PR review comment threads: Use `gh api` to resolve any open review comment conversations on the merged PR (non-blocking; continue if none found).
    - If it is clear what github issue this PR was for (e.g., from branch name or PR title), verify it was closed by the merge. If not, notify the user.

@@ -10,6 +10,6 @@ PR was merged. Remove the branch (locally and remotely), the working tree if you
 
 1. Remove the branch locally and remotely
 2. Remove the working tree if it was used
-3. Remove the todo file if it was present
+3. Remove the todo file (`todo__<issue-number>.md` in the root of the main checkout) if it was present
 4. Close any open PR review comment threads (conversations started by reviewers)
 5. Remove `work-in-progress` label from the linked issue: `gh issue edit <issue-number> --remove-label "work-in-progress"`
